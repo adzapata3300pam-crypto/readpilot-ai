@@ -30,7 +30,17 @@ function owned_student(PDO $pdo, int $teacherId, int $studentId): array
 $teacherId = (int) $user['id'];
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (($_GET['view'] ?? '') === 'sessions') {
-        $statement = $pdo->prepare('SELECT rs.id, rs.student_id AS studentId, rs.book, rs.wpm, rs.accuracy, UNIX_TIMESTAMP(rs.created_at) * 1000 AS ts FROM reading_sessions rs WHERE rs.teacher_id = ? ORDER BY rs.created_at DESC');
+        $statement = $pdo->prepare(
+            'SELECT rs.id, rs.student_id AS studentId, rs.book, rs.wpm, rs.accuracy, rs.duration_seconds, rs.tricky_words, UNIX_TIMESTAMP(rs.created_at) * 1000 AS ts,
+                    e.overall_progress_status AS ai_status, e.fluency_rating AS ai_fluency, e.comprehension_rating AS ai_comprehension,
+                    e.progress_narrative AS ai_narrative, e.phonics_insight AS ai_phonics, e.comprehension_insight AS ai_comprehension_insight,
+                    e.actionable_next_step AS ai_next_step, e.strengths_json, e.struggles_json,
+                    qa.score AS quiz_score, qa.total_questions AS quiz_total
+             FROM reading_sessions rs 
+             LEFT JOIN session_ai_evaluations e ON e.session_id = rs.id
+             LEFT JOIN quiz_attempts qa ON qa.session_id = rs.id OR (qa.id = e.quiz_attempt_id)
+             WHERE rs.teacher_id = ? ORDER BY rs.created_at DESC'
+        );
         $statement->execute([$teacherId]);
         $sessions = $statement->fetchAll();
         $studentStatement = $pdo->prepare('SELECT s.id, s.name, s.color, s.book, sec.name AS section FROM students s INNER JOIN sections sec ON sec.id = s.section_id WHERE s.teacher_id = ? ORDER BY s.name');
@@ -41,8 +51,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $session['studentId'] = (int) $session['studentId'];
             $session['wpm'] = (int) $session['wpm'];
             $session['accuracy'] = (int) $session['accuracy'];
+            $session['duration_seconds'] = (int) ($session['duration_seconds'] ?? 0);
             $session['ts'] = (int) $session['ts'];
+            $session['quiz_score'] = $session['quiz_score'] !== null ? (int) $session['quiz_score'] : null;
+            $session['quiz_total'] = $session['quiz_total'] !== null ? (int) $session['quiz_total'] : null;
+            $session['strengths'] = !empty($session['strengths_json']) ? (json_decode((string)$session['strengths_json'], true) ?: []) : [];
+            $session['struggles'] = !empty($session['struggles_json']) ? (json_decode((string)$session['struggles_json'], true) ?: []) : [];
+            unset($session['strengths_json'], $session['struggles_json']);
         }
+
         foreach ($roster as &$student) {
             $student['id'] = (int) $student['id'];
         }
@@ -52,10 +69,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $sectionStatement = $pdo->prepare('SELECT id, name FROM sections WHERE teacher_id = ? ORDER BY name');
         $sectionStatement->execute([$teacherId]);
         $reportSections = $sectionStatement->fetchAll();
-        $studentStatement = $pdo->prepare('SELECT s.id, s.name, s.color, s.wpm, s.accuracy, sec.name AS section FROM students s INNER JOIN sections sec ON sec.id = s.section_id WHERE s.teacher_id = ? ORDER BY s.name');
+        $studentStatement = $pdo->prepare(
+            'SELECT s.id, s.name, s.color, s.wpm, s.accuracy, sec.name AS section,
+                    (SELECT e.overall_progress_status FROM session_ai_evaluations e WHERE e.student_id = s.id AND e.teacher_id = s.teacher_id ORDER BY e.created_at DESC LIMIT 1) AS ai_progress_status,
+                    (SELECT e.progress_narrative FROM session_ai_evaluations e WHERE e.student_id = s.id AND e.teacher_id = s.teacher_id ORDER BY e.created_at DESC LIMIT 1) AS ai_narrative,
+                    (SELECT e.phonics_insight FROM session_ai_evaluations e WHERE e.student_id = s.id AND e.teacher_id = s.teacher_id ORDER BY e.created_at DESC LIMIT 1) AS ai_phonics,
+                    (SELECT e.actionable_next_step FROM session_ai_evaluations e WHERE e.student_id = s.id AND e.teacher_id = s.teacher_id ORDER BY e.created_at DESC LIMIT 1) AS ai_next_step
+             FROM students s 
+             INNER JOIN sections sec ON sec.id = s.section_id 
+             WHERE s.teacher_id = ? ORDER BY s.name'
+        );
         $studentStatement->execute([$teacherId]);
         $studentRows = $studentStatement->fetchAll();
-        $sessionStatement = $pdo->prepare('SELECT id, student_id AS studentId, book, wpm, accuracy, UNIX_TIMESTAMP(created_at) * 1000 AS ts FROM reading_sessions WHERE teacher_id = ? ORDER BY created_at DESC');
+        $sessionStatement = $pdo->prepare(
+            'SELECT rs.id, rs.student_id AS studentId, rs.book, rs.wpm, rs.accuracy, UNIX_TIMESTAMP(rs.created_at) * 1000 AS ts,
+                    e.overall_progress_status AS ai_status, e.fluency_rating AS ai_fluency, e.progress_narrative AS ai_narrative
+             FROM reading_sessions rs 
+             LEFT JOIN session_ai_evaluations e ON e.session_id = rs.id
+             WHERE rs.teacher_id = ? ORDER BY rs.created_at DESC'
+        );
         $sessionStatement->execute([$teacherId]);
         $reportSessions = $sessionStatement->fetchAll();
         foreach ($reportSessions as &$session) {
@@ -67,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         json_response(['students' => $studentRows, 'sessions' => $reportSessions, 'sections' => $reportSections]);
     }
+
     if (($_GET['view'] ?? '') === 'resources') {
         $statement = $pdo->prepare('SELECT r.id, r.title, r.author, r.genre, r.level, r.lexile, r.words, r.description AS `desc`, r.tags_json, COUNT(ra.id) AS assigned, (SELECT rm.content_text FROM resource_materials rm WHERE rm.resource_id = r.id AND rm.teacher_id = ? ORDER BY rm.id DESC LIMIT 1) AS content FROM resources r LEFT JOIN resource_assignments ra ON ra.resource_id = r.id AND ra.teacher_id = ? WHERE r.created_by IS NULL OR r.created_by = ? GROUP BY r.id ORDER BY r.title');
         $statement->execute([$teacherId, $teacherId, $teacherId]);
@@ -230,9 +263,79 @@ try {
         $title = trim((string) ($_POST['title'] ?? 'Quiz'));
         $score = max(0, (int) ($_POST['score'] ?? 0));
         $total = max(0, (int) ($_POST['total_questions'] ?? 0));
-        $pdo->prepare('INSERT INTO quiz_attempts (teacher_id, student_id, title, score, total_questions) VALUES (?, ?, ?, ?, ?)')->execute([$teacherId, $studentId, $title, $score, $total]);
-        json_response(['ok' => true]);
+        $sessionId = filter_input(INPUT_POST, 'session_id', FILTER_VALIDATE_INT) ?: null;
+
+        // Auto-match session if not explicitly passed
+        if (!$sessionId) {
+            $recentSess = $pdo->prepare('SELECT id FROM reading_sessions WHERE teacher_id = ? AND student_id = ? AND (book = ? OR ? LIKE CONCAT("%", book, "%")) ORDER BY created_at DESC LIMIT 1');
+            $recentSess->execute([$teacherId, $studentId, $title, $title]);
+            $foundSessionId = $recentSess->fetchColumn();
+            if ($foundSessionId) {
+                $sessionId = (int) $foundSessionId;
+            }
+        }
+
+        $pdo->prepare('INSERT INTO quiz_attempts (teacher_id, student_id, session_id, title, score, total_questions) VALUES (?, ?, ?, ?, ?, ?)')
+            ->execute([$teacherId, $studentId, $sessionId, $title, $score, $total]);
+        $quizAttemptId = (int) $pdo->lastInsertId();
+
+        // If we have a linked session, re-trigger AI evaluation so quiz + reading performance are synthesized
+        if ($sessionId) {
+            try {
+                require_once __DIR__ . '/ai-api.php';
+                $sessStmt = $pdo->prepare('SELECT * FROM reading_sessions WHERE id = ? AND teacher_id = ? LIMIT 1');
+                $sessStmt->execute([$sessionId, $teacherId]);
+                $sessionRow = $sessStmt->fetch();
+                if ($sessionRow) {
+                    $stuStmt = $pdo->prepare('SELECT s.*, u.grade_level FROM students s LEFT JOIN users u ON u.id = s.teacher_id WHERE s.id = ?');
+                    $stuStmt->execute([$studentId]);
+                    $stuRow = $stuStmt->fetch() ?: [];
+
+                    $histStmt = $pdo->prepare('SELECT AVG(wpm) AS avg_wpm, AVG(accuracy) AS avg_acc FROM reading_sessions WHERE student_id = ? AND teacher_id = ? AND id <> ?');
+                    $histStmt->execute([$studentId, $teacherId, $sessionId]);
+                    $histRow = $histStmt->fetch() ?: [];
+
+                    $quizData = ['id' => $quizAttemptId, 'score' => $score, 'total_questions' => $total];
+                    $apiKey = get_gemini_api_key();
+                    $evaluation = ($apiKey !== '') ? call_gemini_api($apiKey, $sessionRow, $quizData, $stuRow, $histRow) : null;
+                    if ($evaluation === null) {
+                        $evaluation = evaluate_session_heuristically($sessionRow, $quizData, $stuRow, $histRow);
+                    }
+
+                    $upsert = $pdo->prepare(
+                        'INSERT INTO session_ai_evaluations 
+                         (teacher_id, student_id, session_id, quiz_attempt_id, fluency_rating, comprehension_rating, overall_progress_status, progress_narrative, phonics_insight, comprehension_insight, strengths_json, struggles_json, actionable_next_step, model_name)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         ON DUPLICATE KEY UPDATE 
+                            quiz_attempt_id = VALUES(quiz_attempt_id),
+                            fluency_rating = VALUES(fluency_rating),
+                            comprehension_rating = VALUES(comprehension_rating),
+                            overall_progress_status = VALUES(overall_progress_status),
+                            progress_narrative = VALUES(progress_narrative),
+                            phonics_insight = VALUES(phonics_insight),
+                            comprehension_insight = VALUES(comprehension_insight),
+                            strengths_json = VALUES(strengths_json),
+                            struggles_json = VALUES(struggles_json),
+                            actionable_next_step = VALUES(actionable_next_step),
+                            model_name = VALUES(model_name)'
+                    );
+                    $upsert->execute([
+                        $teacherId, $studentId, $sessionId, $quizAttemptId,
+                        $evaluation['fluency_rating'], $evaluation['comprehension_rating'], $evaluation['overall_progress_status'],
+                        $evaluation['progress_narrative'], $evaluation['phonics_insight'], $evaluation['comprehension_insight'],
+                        json_encode($evaluation['strengths_json'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                        json_encode($evaluation['struggles_json'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                        $evaluation['actionable_next_step'], $evaluation['model_name']
+                    ]);
+                }
+            } catch (Throwable $e) {
+                error_log('Quiz AI evaluation trigger error: ' . $e->getMessage());
+            }
+        }
+
+        json_response(['ok' => true, 'id' => $quizAttemptId, 'session_id' => $sessionId]);
     }
+
     if ($action === 'delete_session') {
         $sessionId = (int) ($_POST['id'] ?? 0);
         if ($sessionId < 1) json_response(['error' => 'Session not found'], 422);

@@ -998,6 +998,16 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok || !data.session_id) throw new Error(data.error || 'Could not save the reading session.');
           savedSessionId = data.session_id;
+          try {
+            session.sessionId = savedSessionId;
+            sessionStorage.setItem('readpilot-reading-session', JSON.stringify(session));
+          } catch(e) {}
+          // Asynchronously trigger AI progress assessment in the background
+          fetch('ai-api.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({ action: 'evaluate_session', session_id: savedSessionId })
+          }).catch(() => {});
         }
         if (!recordingBlob){
           showNoRecording();
@@ -1020,8 +1030,9 @@
           showUploadSuccess(upData.size);
           return;
         }
-        window.location.href = 'results.php';
+        window.location.href = 'results.php' + (savedSessionId ? '?session_id=' + encodeURIComponent(savedSessionId) : '');
       } catch (e) {
+
         showUploadProblem(e.message || 'Something went wrong.', retry);
       }
     }

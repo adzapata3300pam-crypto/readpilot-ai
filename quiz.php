@@ -827,8 +827,13 @@
       window.location.href = 'reading.php';
     });
     if (story.studentId) {
-      fetch('student-api.php', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams({action:'record_quiz', student_id:story.studentId, title:story.title, score:score, total_questions:total})}).catch(() => {});
+      const qParams = new URLSearchParams(window.location.search);
+      const sessId = qParams.get('session_id') || (story && story.sessionId) || '';
+      const postBody = {action:'record_quiz', student_id:story.studentId, title:story.title, score:score, total_questions:total};
+      if (sessId) postBody.session_id = sessId;
+      fetch('student-api.php', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams(postBody)}).catch(() => {});
     }
+
   }
 
   loadActiveQuiz();

@@ -746,14 +746,24 @@
       }
 
       const shown = full.slice(0, visibleCount);
+      function esc(str){
+        return String(str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+
       wrap.innerHTML = shown.map(s=>{
         const student = studentById(s.studentId);
+        const aiBadge = s.ai_status ? `<span class="ai-status-pill ${s.ai_status}">${s.ai_status.replace(/_/g, ' ')}</span>` : '';
+        const quizBadge = (s.quiz_score !== null && s.quiz_total) ? `<span class="s-quiz-pill"><i class='bx bx-brain'></i> Quiz: ${s.quiz_score}/${s.quiz_total}</span>` : '';
         return `
         <div class="session-row" data-id="${s.id}">
           <div class="s-avatar" style="background:${student.color}">${initials(student.name)}</div>
           <div class="s-info">
-            <div class="s-name">${student.name}</div>
-            <div class="s-book">${s.book} • ${sectionOf(student)}</div>
+            <div class="s-name">${esc(student.name)}</div>
+            <div class="s-book" style="display:flex;align-items:center;gap:7px;margin-top:2px;flex-wrap:wrap;">
+              <span>${esc(s.book)} • ${esc(sectionOf(student))}</span>
+              ${aiBadge}
+              ${quizBadge}
+            </div>
           </div>
           <div class="s-time">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
@@ -799,6 +809,22 @@
       if(!s) return;
       const student = studentById(s.studentId);
       const modal = document.getElementById('detailModal');
+
+      const quizCol = (s.quiz_score !== null && s.quiz_total)
+        ? `<div class="m-stat"><div class="v" style="color:var(--purple);">${s.quiz_score}/${s.quiz_total}</div><div class="l">Quiz Score</div></div>`
+        : '';
+
+      const aiDiagnostic = s.ai_narrative ? `
+        <div class="modal-ai-box">
+          <div class="modal-ai-head">
+            <div class="modal-ai-title"><i class='bx bxs-brain'></i> AI Diagnostic</div>
+            <span class="ai-status-pill ${s.ai_status || 'on_track'}">${(s.ai_status || 'on_track').replace(/_/g,' ')}</span>
+          </div>
+          <div class="modal-ai-narrative">${esc(s.ai_narrative)}</div>
+          ${s.ai_fluency ? `<div class="modal-ai-field"><b>Fluency:</b> ${esc(s.ai_fluency)}</div>` : ''}
+          ${s.actionable_next_step ? `<div class="modal-ai-field advice"><b>Teacher Advice:</b> ${esc(s.actionable_next_step)}</div>` : ''}
+        </div>` : '';
+
       modal.innerHTML = `
         <button class="modal-close" id="detailCloseBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -806,22 +832,24 @@
         <div class="modal-head">
           <div class="modal-avatar" style="background:${student.color}">${initials(student.name)}</div>
           <div>
-            <h2>${student.name}</h2>
-            <div class="sub">${s.book}</div>
+            <h2>${esc(student.name)}</h2>
+            <div class="sub">${esc(s.book)}</div>
           </div>
         </div>
-        <div class="modal-stats">
+        <div class="modal-stats" style="${quizCol ? 'grid-template-columns:repeat(4,1fr);' : ''}">
           <div class="m-stat"><div class="v">${s.wpm}</div><div class="l">WPM</div></div>
           <div class="m-stat"><div class="v">${s.accuracy}%</div><div class="l">Accuracy</div></div>
+          ${quizCol}
           <div class="m-stat"><div class="v">${accClass(s.accuracy)==='good'?'Strong':accClass(s.accuracy)==='mid'?'Steady':'Needs Work'}</div><div class="l">Result</div></div>
         </div>
+        ${aiDiagnostic}
         <div class="detail-line">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
           <span class="b">${fmtDate(s.ts)}</span>
         </div>
         <div class="detail-line">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z"/></svg>
-          <span class="b">${s.book}</span>
+          <span class="b">${esc(s.book)}</span>
         </div>
         <div class="modal-actions">
           <button class="btn-secondary" id="viewStudentBtn">View Student</button>

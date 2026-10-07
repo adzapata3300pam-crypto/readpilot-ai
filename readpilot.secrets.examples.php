@@ -7,4 +7,5 @@ return [
     'SUPABASE_S3_ACCESS_KEY' => '',
     'SUPABASE_S3_SECRET_KEY' => '',
     'SUPABASE_BUCKET' => 'readpilot-recordings',
-];
+    'GEMINI_API_KEY' => '', // Google Gemini API Key for AI session evaluation
+];

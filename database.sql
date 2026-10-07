@@ -274,3 +274,31 @@ CREATE TABLE IF NOT EXISTS recommendations (
   CONSTRAINT fk_recommendation_teacher FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_recommendation_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+ALTER TABLE quiz_attempts ADD COLUMN IF NOT EXISTS session_id BIGINT UNSIGNED NULL AFTER student_id;
+
+CREATE TABLE IF NOT EXISTS session_ai_evaluations (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  teacher_id INT UNSIGNED NOT NULL,
+  student_id INT UNSIGNED NOT NULL,
+  session_id BIGINT UNSIGNED NOT NULL UNIQUE,
+  quiz_attempt_id BIGINT UNSIGNED NULL,
+  fluency_rating ENUM('advanced', 'proficient', 'approaching', 'emerging') NOT NULL DEFAULT 'proficient',
+  comprehension_rating ENUM('excellent', 'good', 'partial', 'needs_support') NOT NULL DEFAULT 'good',
+  overall_progress_status ENUM('rapid_growth', 'on_track', 'steady', 'needs_intervention') NOT NULL DEFAULT 'on_track',
+  progress_narrative TEXT NOT NULL,
+  phonics_insight TEXT NOT NULL,
+  comprehension_insight TEXT NOT NULL,
+  strengths_json JSON NOT NULL,
+  struggles_json JSON NOT NULL,
+  actionable_next_step TEXT NOT NULL,
+  model_name VARCHAR(80) NOT NULL DEFAULT 'gemini-1.5-flash',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ai_eval_student (student_id, created_at),
+  INDEX idx_ai_eval_teacher (teacher_id),
+  CONSTRAINT fk_eval_teacher FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_eval_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  CONSTRAINT fk_eval_session FOREIGN KEY (session_id) REFERENCES reading_sessions(id) ON DELETE CASCADE,
+  CONSTRAINT fk_eval_quiz FOREIGN KEY (quiz_attempt_id) REFERENCES quiz_attempts(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+

@@ -318,6 +318,37 @@
   .m-stat{background:var(--bg);border-radius:12px;padding:12px 10px;text-align:center;}
   .m-stat .v{font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;color:var(--ink);}
   .m-stat .l{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+
+  /* AI Diagnostic Components */
+  .ai-status-pill{
+    display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;
+  }
+  .ai-status-pill.rapid_growth{background:var(--green-light);color:var(--green-dark);}
+  .ai-status-pill.on_track{background:rgba(111,191,90,0.18);color:var(--green-dark);}
+  .ai-status-pill.steady{background:var(--teal-light);color:var(--teal);}
+  .ai-status-pill.needs_intervention{background:var(--red-light);color:var(--red);}
+  .s-quiz-pill{
+    display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:10.5px;font-weight:700;background:var(--purple-light);color:var(--purple);
+  }
+  .modal-ai-box{
+    margin:16px 0;background:var(--green-light);border:1.5px solid rgba(111,191,90,0.3);border-radius:14px;padding:16px;text-align:left;
+  }
+  html[data-theme="dark"] .modal-ai-box{background:rgba(111,191,90,0.08);border-color:rgba(111,191,90,0.25);}
+  .modal-ai-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap;}
+  .modal-ai-title{font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:6px;}
+  html[data-theme="dark"] .modal-ai-title{color:var(--green);}
+  .modal-ai-narrative{font-size:12.5px;line-height:1.55;color:var(--ink);margin-bottom:10px;}
+  .modal-ai-field{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:6px;}
+  .modal-ai-field b{color:var(--ink);font-weight:700;}
+  .modal-ai-field.advice{padding:8px 10px;background:var(--card);border-radius:9px;border-left:3px solid var(--green);margin-top:8px;}
+  .ai-summary-card{
+    margin-top:14px;background:linear-gradient(135deg, rgba(111,191,90,0.12), rgba(79,163,184,0.08));
+    border:1px solid rgba(111,191,90,0.3);border-radius:14px;padding:16px 18px;
+  }
+  .ai-summary-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
+  .ai-summary-title{font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:6px;}
+  html[data-theme="dark"] .ai-summary-title{color:var(--green);}
+
   .detail-line{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:600;padding:9px 0;border-top:1px solid var(--border);}
   .detail-line svg{width:14px;height:14px;color:var(--green-dark);flex-shrink:0;}
   .detail-line span.b{color:var(--ink);font-weight:700;}
@@ -349,10 +380,12 @@
   .toast.show{opacity:1;transform:translateY(0);}
   .toast .bx{color:#b1db65;font-size:16px;}
 
+  .s-time-mobile{display:none;font-size:11.5px;color:var(--muted);font-weight:600;}
   @media (max-width:1200px){ .chart-row{grid-template-columns:1fr;} }
   @media (max-width:1000px){ .summary-grid{grid-template-columns:repeat(2,1fr);} }
-  @media (max-width:900px){ .s-time{display:none;} }
+  @media (max-width:900px){ .s-time{display:none;} .s-time-mobile{display:inline;} }
   @media (max-width:760px){ .progress-details>summary{align-items:flex-start;flex-direction:column;gap:4px;} }
+  @media (max-width:440px){ .modal-stats{grid-template-columns:repeat(2,1fr) !important;} }
 
   /* Dark-mode overrides */
   html[data-theme="dark"] .profile-name,
@@ -959,9 +992,25 @@
             <div class="sum-sub">${fmtShort(sorted[sorted.length-1].ts)} • ${sorted[sorted.length-1].accuracy}%</div>
           </div>
         </div>
+        ${(()=>{
+          const latestAi = sorted.slice().reverse().find(s => s.ai_narrative);
+          if(!latestAi) return '';
+          return `
+            <div class="ai-summary-card">
+              <div class="ai-summary-header">
+                <div class="ai-summary-title"><i class='bx bxs-brain'></i> AI Literacy Trajectory Assessment</div>
+                <span class="ai-status-pill ${latestAi.ai_status || 'on_track'}">${(latestAi.ai_status || 'on_track').replace('_',' ')}</span>
+              </div>
+              <div style="font-size:13px;line-height:1.55;color:var(--ink);margin-bottom:8px;">${esc(latestAi.ai_narrative)}</div>
+              ${latestAi.ai_phonics ? `<div style="font-size:12px;color:var(--muted);margin-bottom:4px;"><b style="color:var(--ink);">Phonics Observation:</b> ${esc(latestAi.ai_phonics)}</div>` : ''}
+              ${latestAi.ai_next_step ? `<div style="font-size:12px;color:var(--muted);"><b style="color:var(--ink);">Recommended Action:</b> ${esc(latestAi.ai_next_step)}</div>` : ''}
+            </div>
+          `;
+        })()}
         <div class="sum-sub" style="margin-top:12px;">“Start” is the average of the first ${n} session${n===1?'':'s'}; “now” is the average of the latest ${n}.</div>
       `;
     }
+
 
     // ============================================================
     // Week-by-week table, each week compared with the previous one
@@ -1131,12 +1180,25 @@
 
       const student = studentById(currentStudentId);
       const shown = sorted.slice(0, visibleCount);
-      wrap.innerHTML = shown.map(s=>`
+      wrap.innerHTML = shown.map(s=>{
+        const statusBadges = {
+          rapid_growth: '<span class="ai-status-pill rapid_growth">Rapid Growth</span>',
+          on_track: '<span class="ai-status-pill on_track">On Track</span>',
+          steady: '<span class="ai-status-pill steady">Steady</span>',
+          needs_intervention: '<span class="ai-status-pill needs_intervention">Needs Support</span>'
+        };
+        const aiBadge = s.ai_status && statusBadges[s.ai_status] ? statusBadges[s.ai_status] : '';
+        const quizBadge = (s.quiz_score !== null && s.quiz_total) ? `<span class="s-quiz-pill"><i class='bx bx-brain'></i> Quiz: ${s.quiz_score}/${s.quiz_total}</span>` : '';
+        return `
         <div class="session-row" data-id="${s.id}">
           <div class="s-avatar" style="background:${esc(student.color)}">${initials(student.name)}</div>
           <div class="s-info">
             <div class="s-name">${esc(s.book)}</div>
-            <div class="s-book">${fmtDate(s.ts)}</div>
+            <div class="s-book" style="display:flex;align-items:center;gap:7px;margin-top:3px;flex-wrap:wrap;">
+              <span class="s-time-mobile">${fmtDate(s.ts)}</span>
+              ${aiBadge}
+              ${quizBadge}
+            </div>
           </div>
           <div class="s-time">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
@@ -1147,7 +1209,8 @@
           <div class="s-arrow">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
 
       wrap.querySelectorAll('.session-row').forEach(row=>{
         row.addEventListener('click', ()=>openDetail(Number(row.dataset.id)));
@@ -1191,6 +1254,26 @@
       if(!s) return;
       const student = studentById(s.studentId);
       const modal = document.getElementById('detailModal');
+
+      const quizStatsCol = (s.quiz_score !== null && s.quiz_total)
+        ? `<div class="m-stat"><div class="v" style="color:var(--purple);">${s.quiz_score}/${s.quiz_total}</div><div class="l">Quiz Score</div></div>`
+        : '';
+
+      const aiDiagnostic = s.ai_narrative ? `
+        <div class="modal-ai-box">
+          <div class="modal-ai-head">
+            <div class="modal-ai-title"><i class='bx bxs-brain'></i> AI Diagnostic</div>
+            <span class="ai-status-pill ${s.ai_status || 'on_track'}">${(s.ai_status || 'on_track').replace('_',' ')}</span>
+          </div>
+          <div class="modal-ai-narrative">${esc(s.ai_narrative)}</div>
+          ${s.ai_phonics ? `<div class="modal-ai-field"><b>Phonics:</b> ${esc(s.ai_phonics)}</div>` : ''}
+          ${s.ai_comprehension_insight ? `<div class="modal-ai-field"><b>Comprehension:</b> ${esc(s.ai_comprehension_insight)}</div>` : ''}
+          ${s.ai_next_step ? `<div class="modal-ai-field advice"><b>Teacher Advice:</b> ${esc(s.ai_next_step)}</div>` : ''}
+        </div>` : `
+        <div style="margin:14px 0;text-align:center;">
+          <button class="btn-outline" id="triggerAiBtn" style="font-size:12px;padding:8px 14px;margin:auto;"><i class='bx bxs-brain'></i> Generate AI Assessment</button>
+        </div>`;
+
       modal.innerHTML = `
         <button class="modal-close" id="detailCloseBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -1202,21 +1285,51 @@
             <div class="sub">${esc(s.book)}</div>
           </div>
         </div>
-        <div class="modal-stats">
+        <div class="modal-stats" style="${quizStatsCol ? 'grid-template-columns:repeat(4,1fr);' : ''}">
           <div class="m-stat"><div class="v">${s.wpm}</div><div class="l">WPM</div></div>
           <div class="m-stat"><div class="v">${s.accuracy}%</div><div class="l">Accuracy</div></div>
+          ${quizStatsCol}
           <div class="m-stat"><div class="v">${accClass(s.accuracy)==='good'?'Strong':accClass(s.accuracy)==='mid'?'Steady':'Needs Work'}</div><div class="l">Result</div></div>
         </div>
+        ${aiDiagnostic}
         <div class="detail-line">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
           <span class="b">${fmtDate(s.ts)}</span>
         </div>
         <button class="btn-danger-text" id="deleteSessionBtn">Delete Session</button>
       `;
+
+      const triggerBtn = document.getElementById('triggerAiBtn');
+      if (triggerBtn) {
+        triggerBtn.addEventListener('click', () => {
+          triggerBtn.disabled = true;
+          triggerBtn.textContent = 'Evaluating…';
+          fetch('ai-api.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({ action: 'evaluate_session', session_id: s.id })
+          })
+          .then(r => r.json())
+          .then(res => {
+            if (res && res.evaluation) {
+              s.ai_narrative = res.evaluation.progress_narrative;
+              s.ai_status = res.evaluation.overall_progress_status;
+              s.ai_phonics = res.evaluation.phonics_insight;
+              s.ai_comprehension_insight = res.evaluation.comprehension_insight;
+              s.ai_next_step = res.evaluation.actionable_next_step;
+              openDetail(s.id);
+              renderAll();
+            }
+          })
+          .catch(() => { triggerBtn.textContent = 'Assessment failed'; });
+        });
+      }
+
       document.getElementById('detailCloseBtn').addEventListener('click', closeDetail);
       document.getElementById('deleteSessionBtn').addEventListener('click', ()=>deleteSession(s.id));
       document.getElementById('detailOverlay').classList.add('open');
     }
+
     function closeDetail(){ document.getElementById('detailOverlay').classList.remove('open'); }
     document.getElementById('detailOverlay').addEventListener('click', e=>{
       if(e.target.id==='detailOverlay') closeDetail();

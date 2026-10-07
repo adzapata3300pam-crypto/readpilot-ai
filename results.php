@@ -222,7 +222,33 @@
   }
   .tricky-box .bx{color:#ffb877;font-size:14px;margin-right:5px;vertical-align:-2px;}
 
-  .results-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .results-actions{display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;}
+  @media (max-width:560px){ .results-actions{grid-template-columns:1fr;} }
+
+  .ai-eval-box{
+    display:none;
+    margin-bottom:20px;
+    background:rgba(111,191,90,0.08);
+    border:1.5px solid rgba(111,191,90,0.28);
+    border-radius:16px;
+    padding:16px 18px;
+    text-align:left;
+  }
+  .ai-eval-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap;}
+  .ai-eval-title{display:flex;align-items:center;gap:7px;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:700;color:var(--accent-strong);}
+  .ai-eval-title .bx{font-size:16px;}
+  .ai-eval-badge{
+    font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
+    padding:3px 9px;border-radius:12px;
+  }
+  .ai-eval-badge.rapid_growth{background:rgba(111,191,90,0.22);color:var(--accent-strong);}
+  .ai-eval-badge.on_track{background:rgba(111,191,90,0.18);color:var(--accent-strong);}
+  .ai-eval-badge.steady{background:rgba(79,163,184,0.18);color:var(--teal);}
+  .ai-eval-badge.needs_intervention{background:rgba(234,93,93,0.18);color:var(--red);}
+  .ai-eval-text{font-size:12.5px;line-height:1.55;color:var(--ink);margin:0 0 10px 0;}
+  .ai-eval-tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .ai-eval-tag{font-size:11px;font-weight:700;background:var(--chip-bg);border:1px solid var(--line);border-radius:8px;padding:3px 8px;color:var(--muted);}
+
   .res-btn{
     display:flex;align-items:center;justify-content:center;gap:7px;
     font-family:'Poppins',sans-serif;font-weight:700;font-size:13.5px;
@@ -315,12 +341,23 @@
 
       <div class="tricky-box" id="trickyBox"></div>
 
+      <div class="ai-eval-box" id="aiEvalBox">
+        <div class="ai-eval-head">
+          <div class="ai-eval-title"><i class='bx bxs-brain'></i> AI Session Assessment</div>
+          <div class="ai-eval-badge on_track" id="aiEvalBadge">Evaluating…</div>
+        </div>
+        <p class="ai-eval-text" id="aiEvalNarrative">Analyzing oral fluency and pronunciation patterns…</p>
+        <div class="ai-eval-tags" id="aiEvalTags"></div>
+      </div>
+
       <div class="results-actions">
         <button class="res-btn secondary" id="readAgainBtn"><i class='bx bx-refresh'></i> Read Again</button>
-        <a class="res-btn primary" href="resources.php"><i class='bx bx-library'></i> Library</a>
+        <a class="res-btn secondary" id="quizBtn" href="quiz.php"><i class='bx bx-brain'></i> Take Quiz</a>
+        <a class="res-btn primary" id="progressBtn" href="reports.php"><i class='bx bx-bar-chart-alt-2'></i> Reports</a>
       </div>
     </div>
   </div>
+
 
 <script>
   /* =====================================================================
@@ -335,6 +372,11 @@
 
   function applyTheme(theme){
     document.documentElement.classList.toggle('light-theme', theme === 'light');
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
     themeIcon.className = theme === 'light' ? 'bx bx-moon' : 'bx bx-sun';
     themeToggle.setAttribute('aria-label', theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
     try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* storage unavailable */ }
@@ -443,13 +485,72 @@
     return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   }
 
+  // Active session id & button routing
+  const params = new URLSearchParams(window.location.search);
+  const currentSessionId = params.get('session_id') || results.sessionId || '';
+
+  const quizBtn = document.getElementById('quizBtn');
+  if (quizBtn) {
+    quizBtn.href = 'quiz.php' + (currentSessionId ? '?session_id=' + encodeURIComponent(currentSessionId) : '');
+  }
+
+  const progressBtn = document.getElementById('progressBtn');
+  if (progressBtn && results.studentId) {
+    progressBtn.href = 'progress.php?id=' + encodeURIComponent(results.studentId);
+  }
+
+  // Fetch AI Evaluation for current session
+  if (currentSessionId) {
+    const aiBox = document.getElementById('aiEvalBox');
+    const aiBadge = document.getElementById('aiEvalBadge');
+    const aiNarrative = document.getElementById('aiEvalNarrative');
+    const aiTags = document.getElementById('aiEvalTags');
+    aiBox.style.display = 'block';
+
+    const renderEval = (ev) => {
+      const statusLabels = {
+        rapid_growth: 'Rapid Growth 🚀',
+        on_track: 'On Track ✨',
+        steady: 'Steady 📈',
+        needs_intervention: 'Needs Support 🎯'
+      };
+      aiBadge.className = 'ai-eval-badge ' + (ev.overall_progress_status || 'on_track');
+      aiBadge.textContent = statusLabels[ev.overall_progress_status] || ev.overall_progress_status;
+      aiNarrative.textContent = ev.progress_narrative || 'Evaluation complete.';
+      
+      let tagsHtml = '';
+      if (ev.fluency_rating) tagsHtml += `<span class="ai-eval-tag"><i class='bx bx-tachometer'></i> Fluency: ${escapeHtml(ev.fluency_rating)}</span>`;
+      if (ev.comprehension_rating) tagsHtml += `<span class="ai-eval-tag"><i class='bx bx-book-reader'></i> Comprehension: ${escapeHtml(ev.comprehension_rating)}</span>`;
+      if (ev.phonics_insight) tagsHtml += `<span class="ai-eval-tag"><i class='bx bx-bulb'></i> ${escapeHtml(ev.phonics_insight)}</span>`;
+      aiTags.innerHTML = tagsHtml;
+    };
+
+    fetch('ai-api.php?action=get_evaluation&session_id=' + encodeURIComponent(currentSessionId))
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.evaluation) {
+          renderEval(data.evaluation);
+        } else {
+          // If not evaluated yet, trigger on-the-fly evaluation
+          fetch('ai-api.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({ action: 'evaluate_session', session_id: currentSessionId })
+          })
+          .then(r => r.json())
+          .then(evalRes => {
+            if (evalRes && evalRes.evaluation) renderEval(evalRes.evaluation);
+          }).catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }
+
   /* ---------- Read Again: send the student back into the same story ---------- */
   document.getElementById('readAgainBtn').addEventListener('click', () => {
-    // reading.php reads its story from 'readpilot-reading-session', which
-    // is untouched by this page — so as long as it's still there, jumping
-    // back to reading.php simply restarts the same story from line one.
     window.location.href = 'reading.php';
   });
 </script>
+
 </body>
 </html>

@@ -255,6 +255,15 @@
   .status-pill.support{background:var(--red-light);color:var(--red);}
   .t-view{font-size:12px;font-weight:800;color:var(--green-dark);cursor:pointer;white-space:nowrap;}
 
+  .ai-status-pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:12px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;}
+  .ai-status-pill.rapid_growth{background:var(--green-light);color:var(--green-dark);}
+  .ai-status-pill.on_track{background:rgba(111,191,90,0.18);color:var(--green-dark);}
+  .ai-status-pill.steady{background:var(--teal-light);color:var(--teal);}
+  .ai-status-pill.needs_intervention{background:var(--red-light);color:var(--red);}
+  .ai-class-card{margin-bottom:20px;background:linear-gradient(135deg, rgba(111,191,90,0.12), rgba(79,163,184,0.08));border:1.5px solid rgba(111,191,90,0.3);border-radius:16px;padding:18px 22px;display:flex;align-items:flex-start;gap:16px;}
+  .ai-class-icon{width:42px;height:42px;border-radius:12px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--green-dark);font-size:22px;flex-shrink:0;box-shadow:var(--shadow);}
+
+
   /* ---------- Tip banner ---------- */
   .tip{display:flex;align-items:center;gap:16px;background:var(--green-light);border-radius:var(--radius);padding:20px 24px;position:relative;}
   .tip-icon{width:44px;height:44px;border-radius:50%;background:#fff3c4;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -510,6 +519,18 @@
 
     </div>
 
+    <!-- AI Cohort Summary Banner -->
+    <div class="ai-class-card" id="aiClassCard">
+      <div class="ai-class-icon"><i class='bx bxs-brain'></i></div>
+      <div style="flex-grow:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
+          <b style="font-family:'Poppins',sans-serif;font-size:14px;color:var(--ink);">AI Class Progress & Trajectory Diagnostic</b>
+          <span class="ai-status-pill on_track" id="aiCohortBadge">Active Analysis</span>
+        </div>
+        <div id="aiCohortSummaryText" style="font-size:12.5px;color:var(--muted);line-height:1.5;">Synthesizing oral fluency, decoding accuracy, and comprehension testing across student sessions…</div>
+      </div>
+    </div>
+
     <div class="panel" style="margin-bottom:24px;">
       <div class="panel-head">
         <div class="panel-title">
@@ -531,6 +552,7 @@
               <th class="num">Avg WPM</th>
               <th class="num hide-sm">Avg Accuracy</th>
               <th class="num">Trend</th>
+              <th>AI Diagnostic</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -539,6 +561,7 @@
         </table>
       </div>
     </div>
+
 
     <div class="tip">
       <div class="tip-icon">
@@ -849,7 +872,7 @@
 
       if(list.length===0){
         document.getElementById('reportTableBody').innerHTML =
-          `<tr><td class="table-empty" colspan="7">No students in ${sectionFilter==='all' ? 'this view' : escapeHtml(sectionFilter)} yet.</td></tr>`;
+          `<tr><td class="table-empty" colspan="8">No students in ${sectionFilter==='all' ? 'this view' : escapeHtml(sectionFilter)} yet.</td></tr>`;
         return;
       }
 
@@ -871,6 +894,12 @@
             ${s.sessionsCount ? `<span class="trend-pill ${s.trendPct>0?'up':(s.trendPct<0?'down':'flat')}">${s.trendPct>0?'▲':(s.trendPct<0?'▼':'—')} ${Math.abs(s.trendPct)}%</span>` : '—'}
           </td>
           <td>
+            ${s.student.ai_progress_status
+              ? `<span class="ai-status-pill ${s.student.ai_progress_status}" title="${escapeHtml(s.student.ai_narrative || '')}">${s.student.ai_progress_status.replace('_',' ')}</span>`
+              : (s.sessionsCount ? `<span class="ai-status-pill on_track">Evaluating</span>` : `<span style="color:var(--muted);font-size:11px;">No Data</span>`)
+            }
+          </td>
+          <td>
             ${s.sessionsCount
               ? `<span class="status-pill ${s.status}">${s.status==='support'?'Needs Support':'On Track'}</span>`
               : `<span class="status-pill" style="background:var(--bg);color:var(--muted);">No Sessions</span>`}
@@ -884,6 +913,26 @@
       });
     }
 
+    function renderCohortSummary(stats){
+      const badge = document.getElementById('aiCohortBadge');
+      const text = document.getElementById('aiCohortSummaryText');
+      if(!badge || !text) return;
+      const withSessions = stats.filter(s => s.sessionsCount > 0);
+      if(!withSessions.length){
+        text.textContent = 'No reading sessions logged in this period yet. Complete reading and quiz sessions to view AI progress analytics.';
+        return;
+      }
+      const rapid = withSessions.filter(s => s.student.ai_progress_status === 'rapid_growth').length;
+      const onTrack = withSessions.filter(s => s.student.ai_progress_status === 'on_track').length;
+      const needsIntervention = withSessions.filter(s => s.student.ai_progress_status === 'needs_intervention' || s.status === 'support').length;
+      
+      const pctGood = Math.round(((rapid + onTrack) / withSessions.length) * 100);
+      badge.textContent = `${pctGood}% On Track`;
+      badge.className = 'ai-status-pill ' + (pctGood >= 80 ? 'on_track' : (pctGood >= 60 ? 'steady' : 'needs_intervention'));
+      
+      text.innerHTML = `<strong>${withSessions.length} active readers</strong> evaluated. <strong>${rapid} students</strong> show rapid fluency acceleration, <strong>${onTrack} students</strong> meet grade benchmarks, and <strong>${needsIntervention} student${needsIntervention===1?'':'s'}</strong> flagged for phonics or comprehension scaffolding.`;
+    }
+
     // ============================================================
     // Master render
     // ============================================================
@@ -894,7 +943,9 @@
       renderAccChart(stats);
       renderLists(stats);
       renderTable(stats);
+      renderCohortSummary(stats);
     }
+
 
     // ============================================================
     // Controls
@@ -917,7 +968,7 @@
     // ============================================================
     document.getElementById('exportBtn').addEventListener('click', ()=>{
       const stats = sortedStats(computeStudentStats());
-      const rows = [['Student','Section','Sessions','Avg WPM','Avg Accuracy (%)','Trend (%)','Status']];
+      const rows = [['Student','Section','Sessions','Avg WPM','Avg Accuracy (%)','Trend (%)','Status','AI Progress Status','AI Narrative','AI Recommended Action']];
       stats.forEach(s=>{
         rows.push([
           s.student.name,
@@ -926,13 +977,16 @@
           s.sessionsCount ? s.wpm : '',
           s.sessionsCount ? s.accuracy : '',
           s.sessionsCount ? s.trendPct : '',
-          s.sessionsCount ? (s.status==='support'?'Needs Support':'On Track') : 'No Sessions'
+          s.sessionsCount ? (s.status==='support'?'Needs Support':'On Track') : 'No Sessions',
+          s.student.ai_progress_status ? s.student.ai_progress_status.replace(/_/g, ' ') : (s.sessionsCount ? 'Evaluating' : 'No Data'),
+          s.student.ai_narrative || '',
+          s.student.ai_next_step || ''
         ]);
       });
       const csv = rows.map(r => r.map(v => {
-        const str = String(v);
-        return str.includes(',') ? `"${str}"` : str;
-      }).join(',')).join('\n');
+        const str = String(v ?? '');
+        return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+      }).join(',')).join('\r\n');
 
       const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
@@ -993,8 +1047,13 @@
           baseWpm:Number(student.wpm),
           growth:0,
           baseAcc:Number(student.accuracy),
-          accGrowth:0
+          accGrowth:0,
+          ai_progress_status: student.ai_progress_status || '',
+          ai_narrative: student.ai_narrative || '',
+          ai_phonics: student.ai_phonics || '',
+          ai_next_step: student.ai_next_step || ''
         }));
+
         sessions = result.sessions.map(session=>({...session, id:Number(session.id), studentId:Number(session.studentId)}));
         // Include empty sections, matching the Sections page.
         extraSectionNames = Array.isArray(result.sections)
