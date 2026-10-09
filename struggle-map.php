@@ -109,6 +109,13 @@
   .rank-bar-wrap{flex-grow:1;max-width:220px;height:8px;background:var(--bg);border-radius:6px;overflow:hidden;}
   .rank-bar{height:100%;border-radius:6px;}
   .rank-count{width:70px;flex-shrink:0;text-align:right;font-weight:800;color:var(--ink);font-size:13.5px;}
+  .rank-pagination{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin-top:18px;}
+  .rank-pagination[hidden]{display:none;}
+  .rank-page-btn{min-width:36px;height:36px;padding:0 10px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--ink);font:700 13px 'Nunito',sans-serif;cursor:pointer;}
+  .rank-page-btn:hover{border-color:var(--green);color:var(--green-dark);}
+  .rank-page-btn.active{background:var(--green);border-color:var(--green);color:#fff;}
+  .rank-page-btn:focus-visible{outline:2px solid var(--green-dark);outline-offset:2px;}
+  .rank-page-btn[hidden]{display:none;}
 
   /* Modal specifics for word detail (reuses .overlay / .modal from students.php) */
   .word-modal-head{display:flex;align-items:center;gap:14px;margin-bottom:6px;padding-right:30px;}
@@ -278,10 +285,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           Aug 21, 2026
         </div>
-        <div class="bell">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge">3</span>
-        </div>
       </div>
     </div>
 
@@ -325,6 +328,7 @@
             <span class="view-all" id="rankCount">-- words</span>
           </div>
           <div class="rank-list" id="rankList"><!-- filled by JS --></div>
+          <nav class="rank-pagination" id="rankPagination" aria-label="Most Flagged Words pages" hidden></nav>
         </div>
 
         <div class="tip">
@@ -503,7 +507,7 @@
         activeGroup = g.key;
         document.querySelectorAll('.cloud-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.group === g.key));
         renderCloud();
-        renderRankList();
+        resetRankList();
       });
       filterGroupEl.appendChild(btn);
     });
@@ -631,17 +635,24 @@
 
     // ---- Render ranked list ----
     const rankListEl = document.getElementById('rankList');
+    const rankPaginationEl = document.getElementById('rankPagination');
+    const RANK_PAGE_SIZE = 10;
+    let rankPage = 1;
+
     function renderRankList(){
       const list = [...visibleWords()].sort((a,b) => b.count - a.count);
       document.getElementById('rankCount').textContent = `${list.length} word${list.length === 1 ? '' : 's'}`;
       rankListEl.innerHTML = '';
       const max = list.length ? list[0].count : 1;
-      list.forEach((w, i) => {
+      const pageCount = Math.ceil(list.length / RANK_PAGE_SIZE);
+      rankPage = Math.max(1, Math.min(rankPage, pageCount || 1));
+      const start = (rankPage - 1) * RANK_PAGE_SIZE;
+      list.slice(start, start + RANK_PAGE_SIZE).forEach((w, i) => {
         const cat = CATEGORIES[w.cat];
         const row = document.createElement('div');
         row.className = 'rank-row';
         row.innerHTML = `
-          <div class="rank-num">${i + 1}</div>
+          <div class="rank-num">${start + i + 1}</div>
           <div class="rank-word">${w.word}</div>
           <span class="rank-cat" style="background:${cat.light};color:${cat.color}">${cat.label}</span>
           <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(w.count/max*100).toFixed(0)}%;background:${cat.color}"></div></div>
@@ -650,6 +661,28 @@
         row.addEventListener('click', () => openWordModal(w));
         rankListEl.appendChild(row);
       });
+      rankPaginationEl.innerHTML = '';
+      rankPaginationEl.hidden = pageCount <= 1;
+      if(pageCount <= 1) return;
+      for(let page = 1; page <= pageCount; page++){
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'rank-page-btn' + (page === rankPage ? ' active' : '');
+        button.textContent = page;
+        button.setAttribute('aria-label', `Page ${page}`);
+        if(page === rankPage) button.setAttribute('aria-current', 'page');
+        button.addEventListener('click', () => {
+          rankPage = page;
+          renderRankList();
+          document.getElementById('rankList').scrollIntoView({behavior:'smooth', block:'start'});
+        });
+        rankPaginationEl.appendChild(button);
+      }
+    }
+
+    function resetRankList(){
+      rankPage = 1;
+      renderRankList();
     }
 
     // ---- Word detail modal ----
@@ -683,13 +716,13 @@
         btn.classList.add('active');
         currentRange = btn.dataset.range === 'month' ? 'all' : btn.dataset.range; // demo data only tags "recent"; month falls back to all
         renderCloud();
-        renderRankList();
+        resetRankList();
       });
     });
     document.getElementById('wordSearch').addEventListener('input', (e) => {
       searchTerm = e.target.value.trim().toLowerCase();
       renderCloud();
-      renderRankList();
+      resetRankList();
     });
 
     renderCloud();
@@ -751,7 +784,7 @@
       STUDENT_SUMMARY = buildStudentSummary();
       selectedStudent = STUDENT_SUMMARY.length ? STUDENT_SUMMARY[0].name : null;
       renderCloud();
-      renderRankList();
+      resetRankList();
       renderStudentList();
       renderStrugglesPanel();
     }).catch(()=>{});

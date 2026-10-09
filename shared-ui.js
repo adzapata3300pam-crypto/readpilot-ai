@@ -463,23 +463,58 @@
       bell.setAttribute('tabindex', '0');
       bell.title = 'Notifications';
 
+      var items = [];
+      if (bell.dataset.notifications) {
+        try {
+          var parsedItems = JSON.parse(bell.dataset.notifications);
+          if (Array.isArray(parsedItems)) items = parsedItems;
+        } catch (error) {
+          console.error('Unable to read notification data:', error);
+        }
+      }
+      var badge = bell.querySelector('.badge');
+      if (badge) {
+        var notificationCount = Number(bell.dataset.notificationCount);
+        if (!Number.isFinite(notificationCount) || notificationCount < 0) notificationCount = items.length;
+        if (notificationCount > 0) {
+          badge.textContent = notificationCount > 9 ? '9+' : String(notificationCount);
+          badge.style.display = '';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+
       var panel = document.createElement('div');
       panel.className = 'bell-panel';
       document.body.appendChild(panel);
       panel.addEventListener('click', function (e) { e.stopPropagation(); });
 
       function renderPanel(){
-        panel.innerHTML =
-          '<div class="bell-panel-head">' +
-            '<span class="bell-panel-title">Notifications</span>' +
-          '</div>' +
-          '<div class="bell-item">' +
-            '<span class="bell-item-icon"><i class="bx bx-check-double"></i></span>' +
-            '<div>' +
-              '<div>You are all caught up</div>' +
-              '<div class="sub">No new notifications</div>' +
+        if (!items.length) {
+          panel.innerHTML =
+            '<div class="bell-panel-head">' +
+              '<span class="bell-panel-title">Notifications</span>' +
             '</div>' +
-          '</div>';
+            '<div class="bell-item">' +
+              '<span class="bell-item-icon"><i class="bx bx-check-double"></i></span>' +
+              '<div>' +
+                '<div>You are all caught up</div>' +
+                '<div class="sub">No new notifications</div>' +
+              '</div>' +
+            '</div>';
+          return;
+        }
+        panel.innerHTML = '<div class="bell-panel-head"><span class="bell-panel-title">Notifications</span></div>';
+        items.forEach(function (item) {
+          var row = document.createElement('div');
+          row.className = 'bell-item';
+          row.textContent = item.title || '';
+          var sub = document.createElement('div');
+          sub.className = 'sub';
+          sub.textContent = item.sub || '';
+          row.appendChild(sub);
+          panel.appendChild(row);
+        });
       }
 
       function positionPanel(){
@@ -513,8 +548,7 @@
         positionPanel();
         window.addEventListener('scroll', onScroll, true);
         window.addEventListener('resize', positionPanel);
-        var badge = bell.querySelector('.badge');
-        if (badge) badge.textContent = '0';
+        if (badge) badge.style.display = 'none';
       }
 
       bell.addEventListener('click', function (e) {

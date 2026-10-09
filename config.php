@@ -27,3 +27,8 @@ function db(): PDO
 
     return $pdo;
 }
+
+function access_id_storage_directory(): string
+{
+    return dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'readpilot-private' . DIRECTORY_SEPARATOR . 'access-ids';
+}

@@ -36,11 +36,12 @@ try {
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $statement = $pdo->prepare(
-            'SELECT r.id, r.student_id AS studentId, s.name AS studentName, s.color, r.source, r.status,
+            'SELECT r.id, r.student_id AS studentId, s.name AS studentName, s.color, sec.name AS sectionName, r.source, r.status,
                     r.related_book AS relatedBook, r.skill_focus AS skillFocus, r.practice_notes AS practiceNotes,
                     r.created_at AS createdAt, r.approved_at AS approvedAt, r.applied_at AS appliedAt
              FROM recommendations r INNER JOIN students s ON s.id = r.student_id
-             WHERE r.teacher_id = ? AND r.status <> \'dismissed\' ORDER BY r.created_at DESC'
+             INNER JOIN sections sec ON sec.id = s.section_id
+             WHERE r.teacher_id = ? ORDER BY r.created_at DESC'
         );
         $statement->execute([$teacherId]);
         $recommendations = $statement->fetchAll();
@@ -50,12 +51,39 @@ try {
                 SUM(status = 'pending') AS pending,
                 SUM(status = 'approved') AS approved,
                 SUM(status = 'applied') AS applied
-             FROM recommendations WHERE teacher_id = ? AND status <> 'dismissed'"
+             FROM recommendations WHERE teacher_id = ?"
         );
         $statsStatement->execute([$teacherId]);
         $stats = $statsStatement->fetch() ?: [];
         foreach (['aiThisWeek', 'pending', 'approved', 'applied'] as $key) $stats[$key] = (int) ($stats[$key] ?? 0);
-        recommendation_response(['recommendations' => $recommendations, 'stats' => $stats]);
+        $progressStatement = $pdo->prepare(
+            "SELECT
+                SUM(progress.latestStatus IS NOT NULL) AS assessedCount,
+                SUM(progress.latestStatus = 'needs_intervention') AS needsSupportCount
+             FROM (
+                SELECT s.id,
+                    (SELECT e.overall_progress_status
+                     FROM session_ai_evaluations e
+                     INNER JOIN reading_sessions rs ON rs.id = e.session_id
+                        AND rs.student_id = e.student_id AND rs.teacher_id = e.teacher_id
+                     WHERE e.student_id = s.id AND e.teacher_id = s.teacher_id
+                     ORDER BY rs.created_at DESC, rs.id DESC
+                     LIMIT 1) AS latestStatus
+                FROM students s
+                INNER JOIN sections sec ON sec.id = s.section_id AND sec.teacher_id = s.teacher_id
+                WHERE s.teacher_id = ?
+             ) progress"
+        );
+        $progressStatement->execute([$teacherId]);
+        $progressSummary = $progressStatement->fetch() ?: [];
+        foreach (['assessedCount', 'needsSupportCount'] as $key) {
+            $progressSummary[$key] = (int) ($progressSummary[$key] ?? 0);
+        }
+        recommendation_response([
+            'recommendations' => $recommendations,
+            'stats' => $stats,
+            'progressSummary' => $progressSummary,
+        ]);
     }
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') recommendation_response(['error' => 'Method not allowed'], 405);

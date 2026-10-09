@@ -252,10 +252,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           Aug 21, 2026
         </div>
-        <div class="bell">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge">3</span>
-        </div>
       </div>
     </div>
 
@@ -280,7 +276,7 @@
                 <button class="btn-outline" id="pfpUploadBtn"><i class='bx bx-upload'></i>Upload photo</button>
                 <button class="btn-outline danger" id="pfpRemoveBtn"><i class='bx bx-trash'></i>Remove</button>
               </div>
-              <div class="pfp-hint">JPG or PNG, square photos look best. Max 5MB.</div>
+              <div class="pfp-hint">JPG or PNG, square crop with a centered 1.2× zoom. Max 5MB.</div>
             </div>
           </div>
 
@@ -476,6 +472,7 @@
     </div>
   </div>
 
+  <script src="profile-photo.js"></script>
   <script>
     // ---- Hamburger: collapse sidebar ----
     // The collapsed/expanded state now lives on <html data-sidebar="collapsed">
@@ -554,20 +551,21 @@
         showToast('Image is larger than 5MB');
         return;
       }
-      var reader = new FileReader();
-      reader.onload = function(ev){
-        var url = ev.target.result;
-        pfpCircle.innerHTML = '<img src="' + url + '" alt="Profile photo">';
-        sidebarAvatar.innerHTML = '<img src="' + url + '" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      window.createProfilePhotoCrop(file).then(function(croppedFile){
         var formData = new FormData();
         formData.append('action', 'upload_profile_photo');
-        formData.append('profile_photo', file);
-        fetch('account-api.php', {method:'POST', body:formData})
+        formData.append('profile_photo', croppedFile);
+        return fetch('account-api.php', {method:'POST', body:formData})
           .then(response=>response.json().then(data=>({ok:response.ok,data:data})))
-          .then(result=>{ if(!result.ok) throw new Error(result.data.error || 'Unable to save profile photo'); showToast('Profile photo saved'); })
-          .catch(error=>showToast(error.message));
-      };
-      reader.readAsDataURL(file);
+          .then(function(result){
+            if(!result.ok) throw new Error(result.data.error || 'Unable to save profile photo');
+            var photo = '<img src="' + result.data.profile_image + '" alt="Profile photo">';
+            pfpCircle.innerHTML = photo;
+            sidebarAvatar.innerHTML = photo;
+            showToast('Profile photo saved');
+          });
+      }).catch(function(error){ showToast(error.message); })
+        .finally(function(){ pfpInput.value = ''; });
     });
 
     document.getElementById('pfpRemoveBtn').addEventListener('click', function(){

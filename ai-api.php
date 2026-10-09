@@ -25,8 +25,7 @@ function get_gemini_api_key(): string
     }
     $secretsPaths = [
         dirname(__DIR__, 2) . '/readpilot-secrets.php',
-        'C:/xampp/readpilot-secrets.php',
-        __DIR__ . '/readpilot.secrets.php'
+        'C:/xampp/readpilot-secrets.php'
     ];
     foreach ($secretsPaths as $path) {
         if (is_file($path)) {
@@ -173,14 +172,17 @@ function evaluate_session_heuristically(array $session, ?array $quiz, array $stu
 
 function call_gemini_api(string $apiKey, array $session, ?array $quiz, array $student, array $history): ?array
 {
-    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' . urlencode($apiKey);
+    if ($apiKey === '' || preg_match('/[\r\n]/', $apiKey)) {
+        return null;
+    }
+
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent';
 
     $wpm = (int) ($session['wpm'] ?? 0);
     $accuracy = (int) ($session['accuracy'] ?? 0);
     $book = (string) ($session['book'] ?? 'Unknown Book');
     $duration = (int) ($session['duration_seconds'] ?? 0);
     $trickyWords = (string) ($session['tricky_words'] ?? 'None recorded');
-    $studentName = (string) ($student['name'] ?? 'Student');
     $grade = (string) ($student['grade_level'] ?? 'Grade 3');
     
     $quizScore = $quiz ? (int) $quiz['score'] : 'N/A';
@@ -193,7 +195,6 @@ You are an expert elementary literacy specialist and reading diagnostic evaluato
 Analyze this primary student's reading session and comprehension test performance to dictate their progress report.
 
 STUDENT PROFILE:
-- Name: {$studentName}
 - Grade Level: {$grade}
 - Book/Story Read: "{$book}"
 
@@ -242,10 +243,11 @@ EOT;
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'X-Goog-Api-Key: ' . $apiKey],
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 8,
-        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
         CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
     ]);
 
@@ -280,6 +282,10 @@ EOT;
         'actionable_next_step'    => (string) ($parsed['actionable_next_step'] ?? ''),
         'model_name'              => 'gemini-3.5-flash-lite',
     ];
+}
+
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') !== __FILE__) {
+    return;
 }
 
 $action = (string) ($_POST['action'] ?? ($_GET['action'] ?? ''));
@@ -453,5 +459,5 @@ try {
     ai_response(['error' => 'Unknown AI action.'], 400);
 } catch (Throwable $e) {
     error_log('AI API failure: ' . $e->getMessage());
-    ai_response(['error' => 'AI processing failed: ' . $e->getMessage()], 500);
+    ai_response(['error' => 'AI processing failed. Please try again.'], 500);
 }

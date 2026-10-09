@@ -2,6 +2,7 @@
 require_once __DIR__ . '/auth-guard.php';
 require_admin();
 $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, section_name, status, last_login FROM users ORDER BY role DESC, full_name ASC')->fetchAll();
+$csrfToken = csrf_token();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,6 +40,10 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
 .pending-row .row-actions{flex-shrink:0;}
 .pending-row .s-time{width:170px;}
 .review-reason{font-size:13px;color:var(--ink);font-weight:600;line-height:1.6;background:var(--bg);border-radius:12px;padding:12px 14px;}
+.review-id-preview{margin-top:18px;}
+.review-id-frame{width:100%;height:min(55vh,520px);border:1px solid var(--border);border-radius:12px;background:var(--bg);}
+.review-id-image{display:block;max-width:100%;max-height:55vh;margin:0 auto;border:1px solid var(--border);border-radius:12px;object-fit:contain;background:var(--bg);}
+.review-id-message{padding:16px;border-radius:12px;background:var(--bg);color:var(--muted);font-size:13px;font-weight:700;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -82,6 +87,7 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
         <a class="nav-item" href="admin.php"><i class="bx bxs-dashboard"></i><span class="label">Dashboard</span></a>
         <a class="nav-item active" href="users-admin.php"><i class="bx bx-user-circle"></i><span class="label">User Management</span></a>
         <a class="nav-item" href="gradesec-admin.php"><i class="bx bx-layer"></i><span class="label">Student Records</span></a>
+        <a class="nav-item" href="teacher-activity-admin.php"><i class="bx bx-pulse"></i><span class="label">Teacher Activity</span></a>
         <a class="nav-item" href="audit-trail-admin.php"><i class="bx bx-history"></i><span class="label">Audit Log</span></a>
         <a class="nav-item" href="settings-admin.php"><i class="bx bx-cog"></i><span class="label">Settings</span></a>
       </nav>
@@ -89,7 +95,7 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
     <div class="teacher-card">
       <div class="teacher-row">
         <div class="teacher-row-info">
-          <div class="avatar">🛡️</div>
+          <div class="avatar"><?php include __DIR__ . '/profile-avatar.php'; ?></div>
           <div><div class="teacher-name"><?= htmlspecialchars(current_user()['full_name'], ENT_QUOTES, 'UTF-8') ?></div><div class="teacher-role">System Administrator</div></div>
         </div>
         <button class="teacher-logout-btn" id="sidebarLogoutBtn" title="Log out" aria-label="Log out"><i class='bx bx-log-out'></i></button>
@@ -113,7 +119,7 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           Add User
         </button>
-        <div class="bell" id="notifBell" aria-label="Notifications" tabindex="0">
+        <div class="bell" id="notifBell" aria-label="Notifications" tabindex="0" data-notifications-managed="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           <span class="badge" id="notifBadge" style="display:none;">0</span>
           <div class="bell-panel" id="notifPanel">
@@ -141,6 +147,24 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
           <b>No pending requests</b>
           New teacher and admin sign-up requests will show up here for review.
         </div>
+      </div>
+    </div>
+
+    <div class="panel" id="accessIdDocumentsPanel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <i class="bx bx-id-card"></i>
+          Retained Access ID Documents
+        </div>
+      </div>
+      <div id="accessIdDocumentsStatus" class="empty-state" role="status">Loading ID documents…</div>
+      <div class="table-scroll" id="accessIdDocumentsTable" style="display:none;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Applicant</th><th>School</th><th>Request status</th><th>Submitted</th><th style="text-align:right;">Actions</th></tr>
+          </thead>
+          <tbody id="accessIdDocumentsList"></tbody>
+        </table>
       </div>
     </div>
 
@@ -309,6 +333,13 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
       <div class="modal-section-title"><i class='bx bx-message-detail'></i>Reason for access</div>
       <div class="review-reason" id="reviewReason">—</div>
 
+      <div class="review-id-preview" id="reviewIdPreview" style="display:none;">
+        <div class="modal-section-title"><i class='bx bx-id-card'></i>Uploaded ID</div>
+        <div class="review-id-message" id="reviewIdMessage">Loading ID document…</div>
+        <img class="review-id-image" id="reviewIdImage" alt="Applicant's uploaded ID document" style="display:none;">
+        <iframe class="review-id-frame" id="reviewIdPdf" title="Applicant's uploaded ID document" style="display:none;"></iframe>
+      </div>
+
       <div class="form-row" id="reviewGradeRow" style="margin-top:18px;">
         <label for="reviewGrade">Assign grade (for teacher accounts)</label>
         <select id="reviewGrade">
@@ -439,7 +470,9 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
                 role: request.requested_role === 'admin' ? 'Admin' : 'Teacher',
                 reason: request.reason,
                 submittedAt: request.created_at,
-                status: request.status
+                status: request.status,
+                hasIdDocument: request.has_id_document === true || request.has_id_document === 1 || request.has_id_document === '1',
+                idDocumentType: request.id_document_type
               };
             });
             render();
@@ -492,10 +525,7 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
 
         notifItemsList.innerHTML = '';
         if (pending.length === 0){
-          var none = document.createElement('div');
-          none.className = 'bell-item';
-          none.textContent = 'No pending requests';
-          notifItemsList.appendChild(none);
+          notifItemsList.textContent = 'No new notifications';
         } else {
           pending.slice(0, 4).forEach(function(r){
             var item = document.createElement('div');
@@ -523,7 +553,19 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
       var reviewAvatar = document.getElementById('reviewAvatar');
       var reviewGradeRow = document.getElementById('reviewGradeRow');
       var reviewGrade = document.getElementById('reviewGrade');
+      var reviewIdPreview = document.getElementById('reviewIdPreview');
+      var reviewIdMessage = document.getElementById('reviewIdMessage');
+      var reviewIdImage = document.getElementById('reviewIdImage');
+      var reviewIdPdf = document.getElementById('reviewIdPdf');
       var currentReviewId = null;
+
+      function clearReviewIdPreview(){
+        reviewIdImage.removeAttribute('src');
+        reviewIdPdf.removeAttribute('src');
+        reviewIdImage.style.display = 'none';
+        reviewIdPdf.style.display = 'none';
+        reviewIdPreview.style.display = 'none';
+      }
 
       function openReview(id){
         var r = findRequest(id);
@@ -537,9 +579,36 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
         reviewAvatar.style.background = colorFor(r.name);
         reviewAvatar.textContent = initials(r.name);
         reviewGradeRow.style.display = r.role === 'Teacher' ? 'block' : 'none';
+        clearReviewIdPreview();
+        if (r.hasIdDocument) {
+          reviewIdPreview.style.display = 'block';
+          reviewIdMessage.textContent = 'Loading ID document…';
+          var documentUrl = 'admin-api.php?view=id_document&request_id=' + encodeURIComponent(r.id);
+          if (r.idDocumentType === 'jpg' || r.idDocumentType === 'jpeg' || r.idDocumentType === 'png') {
+            reviewIdImage.onload = function(){
+              reviewIdImage.style.display = 'block';
+              reviewIdMessage.style.display = 'none';
+            };
+            reviewIdImage.onerror = function(){
+              reviewIdMessage.textContent = 'The ID image could not be displayed. Check that the document is still available.';
+              reviewIdMessage.style.display = 'block';
+            };
+            reviewIdImage.src = documentUrl;
+          } else if (r.idDocumentType === 'pdf') {
+            reviewIdPdf.onload = function(){ reviewIdMessage.style.display = 'none'; };
+            reviewIdPdf.src = documentUrl;
+            reviewIdPdf.style.display = 'block';
+          } else {
+            reviewIdMessage.textContent = 'This request has an unsupported ID document format.';
+          }
+        }
         reviewOverlay.classList.add('open');
       }
-      function closeReview(){ reviewOverlay.classList.remove('open'); currentReviewId = null; }
+      function closeReview(){
+        reviewOverlay.classList.remove('open');
+        currentReviewId = null;
+        clearReviewIdPreview();
+      }
       document.getElementById('reviewModalCloseBtn').addEventListener('click', closeReview);
       reviewOverlay.addEventListener('click', function(e){ if (e.target === reviewOverlay) closeReview(); });
 
@@ -570,6 +639,7 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
             closeDeclineConfirm();
             closeReview();
             refreshRequests();
+            if (window.refreshAccessIdDocuments) window.refreshAccessIdDocuments();
             toast(result.data.message || 'Request declined');
           })
           .catch(function (error) { toast(error.message || 'Unable to decline request'); });
@@ -595,6 +665,7 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
           .then(function (result) {
             if (!result.ok) throw new Error(result.data.error || 'Unable to approve request');
             refreshRequests();
+            if (window.refreshAccessIdDocuments) window.refreshAccessIdDocuments();
             toast(result.data.message || 'Access request approved');
           })
           .catch(function (error) { toast(error.message || 'Unable to approve request'); });
@@ -635,6 +706,89 @@ $accountRows = db()->query('SELECT id, full_name, email, role, grade_level, sect
       });
 
       refreshRequests();
+    })();
+  </script>
+  <script>
+    (function accessIdDocuments(){
+      var statusEl = document.getElementById('accessIdDocumentsStatus');
+      var tableEl = document.getElementById('accessIdDocumentsTable');
+      var listEl = document.getElementById('accessIdDocumentsList');
+      var csrfToken = <?= json_encode($csrfToken, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+
+      function escapeHtml(value){
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      function refresh(){
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'Loading ID documents…';
+        tableEl.style.display = 'none';
+        fetch('admin-api.php?view=id_documents', { credentials: 'same-origin', cache: 'no-store' })
+          .then(function(response){ return response.json().then(function(data){ return { ok: response.ok, data: data }; }); })
+          .then(function(result){
+            if (!result.ok || !Array.isArray(result.data.documents)) {
+              throw new Error(result.data.error || 'Unable to load retained ID documents.');
+            }
+            listEl.innerHTML = '';
+            if (result.data.documents.length === 0) {
+              statusEl.textContent = 'No retained ID documents.';
+              return;
+            }
+            result.data.documents.forEach(function(documentRecord){
+              var id = parseInt(documentRecord.id, 10);
+              if (!Number.isInteger(id) || id < 1) return;
+              var row = document.createElement('tr');
+              row.innerHTML =
+                '<td><div class="u-name">' + escapeHtml(documentRecord.full_name) + '</div><div class="u-email">' + escapeHtml(documentRecord.email) + '</div></td>' +
+                '<td>' + escapeHtml(documentRecord.school) + '</td>' +
+                '<td><span class="status-pill">' + escapeHtml(documentRecord.status) + '</span></td>' +
+                '<td class="cell-muted">' + escapeHtml(documentRecord.created_at) + '</td>' +
+                '<td><div class="row-actions">' +
+                  '<a class="icon-btn" href="admin-api.php?view=id_document&amp;request_id=' + encodeURIComponent(id) + '" title="Download ID document" aria-label="Download ID document"><i class="bx bx-download"></i></a>' +
+                  '<button class="icon-btn danger" type="button" data-delete-access-id="' + id + '" title="Delete ID document" aria-label="Delete ID document"><i class="bx bx-trash"></i></button>' +
+                '</div></td>';
+              listEl.appendChild(row);
+            });
+            statusEl.style.display = 'none';
+            tableEl.style.display = 'block';
+          })
+          .catch(function(error){
+            statusEl.textContent = error.message || 'Unable to load retained ID documents.';
+            if (window.console) console.error('Access ID documents failed to load:', error);
+          });
+      }
+
+      window.refreshAccessIdDocuments = refresh;
+      listEl.addEventListener('click', function(event){
+        var button = event.target.closest('button[data-delete-access-id]');
+        if (!button) return;
+        var requestId = button.dataset.deleteAccessId;
+        if (!window.confirm('Permanently delete this applicant ID document? This cannot be undone.')) return;
+        button.disabled = true;
+        fetch('admin-api.php', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            action: 'delete_access_id',
+            request_id: requestId,
+            csrf_token: csrfToken
+          })
+        })
+          .then(function(response){ return response.json().then(function(data){ return { ok: response.ok, data: data }; }); })
+          .then(function(result){
+            if (!result.ok) throw new Error(result.data.error || 'Unable to delete the ID document.');
+            refresh();
+          })
+          .catch(function(error){
+            button.disabled = false;
+            window.alert(error.message || 'Unable to delete the ID document.');
+          });
+      });
+
+      refresh();
     })();
   </script>
   <script src="admin-shared-ui.js"></script>

@@ -30,6 +30,29 @@
   }
 })();
 </script>
+<style>
+  /* Editable student name in the profile pop-up */
+  .name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .name-row h2{margin:0;}
+  .name-edit-btn{
+    display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);background:var(--bg);color:var(--green-dark);
+    border-radius:20px;padding:4px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;
+  }
+  .name-edit-btn .bx{font-size:14px;}
+  .name-edit-btn:hover{background:var(--green-light);}
+  .name-edit-form{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%;}
+  .name-edit-form input{
+    flex:1 1 180px;min-width:0;border:1.5px solid var(--green);border-radius:10px;padding:8px 11px;
+    font-family:inherit;font-size:15px;font-weight:700;color:var(--ink);background:var(--card);outline:none;
+  }
+  .name-edit-form button{
+    border:none;border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;
+    display:inline-flex;align-items:center;gap:4px;
+  }
+  .name-edit-form .name-save{background:var(--green);color:#fff;}
+  .name-edit-form .name-save:disabled{opacity:.6;cursor:wait;}
+  .name-edit-form .name-cancel{background:var(--bg);color:var(--muted);}
+</style>
 </head>
 <body>
 
@@ -118,19 +141,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
           <input type="text" id="searchInput" placeholder="Search by name or book...">
         </div>
-        <button class="btn-new" id="addStudentBtn">
+        <button class="btn-new" id="addStudentBtn" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           Add Student
         </button>
-        <div class="bell" id="bellBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge" id="bellBadge">3</span>
-          <div class="bell-panel" id="bellPanel">
-            <div class="bell-item">Carmen Reyes finished a session <div class="sub">379 WPM • 100% accuracy</div></div>
-            <div class="bell-item">Weekly reports are ready <div class="sub">Tap Reports to view</div></div>
-            <div class="bell-item">2 students haven't read this week <div class="sub">Check the Needs Support filter</div></div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -223,7 +237,7 @@
       <form id="addForm">
         <div class="form-row">
           <label for="newName">Full name</label>
-          <input type="text" id="newName" placeholder="e.g. Sofia Delgado" required>
+          <input type="text" id="newName" placeholder="Enter the student's full name" required>
         </div>
         <div class="form-row">
           <label for="newSection">Section</label>
@@ -307,99 +321,9 @@
       "The Grumpy Garden Gnome"
     ];
 
-    const DEFAULT_SECTION_NAMES = ['Section A', 'Section B', 'Section C'];
-    let sectionNames = DEFAULT_SECTION_NAMES.slice();
+    let sectionNames = [];
     let sectionIds = {};
-    try {
-      const savedSections = JSON.parse(localStorage.getItem('readpilot-section-names'));
-      if(Array.isArray(savedSections) && savedSections.length===3 && savedSections.every(name=>typeof name==='string' && name.trim())){
-        sectionNames = savedSections.map(name=>name.trim());
-      }
-    } catch (e) { /* localStorage unavailable — use default section names */ }
-
-    let students = [
-      {
-        id: 1, name:'Carmen Reyes', section:'Section A', color:'#6fbf5a', book:'A Rainy Day Surprise',
-        wpm:312, accuracy:98, sessions:15, sessionsThisWeek:3, booksCompleted:8, status:'ontrack',
-        lastActive:'May 12, 2024 • 3:45 PM', notes:'',
-        log:[
-          {book:'The Lion and the Mouse', date:'May 12 • 3:45 PM', wpm:379, accuracy:100},
-          {book:'The Lion and the Mouse', date:'May 12 • 3:20 PM', wpm:312, accuracy:98},
-        ]
-      },
-      {
-        id: 2, name:'Eva Mendoza', section:'Section A', color:'#c9924d', book:'The Three Little Pigs',
-        wpm:298, accuracy:95, sessions:10, sessionsThisWeek:2, booksCompleted:5, status:'ontrack',
-        lastActive:'May 12, 2024 • 2:55 PM', notes:'',
-        log:[{book:'The Three Little Pigs', date:'May 12 • 2:55 PM', wpm:298, accuracy:95}]
-      },
-      {
-        id: 3, name:'Isabella Ramos', section:'Section A', color:'#f2a13a', book:'Journey to the Stars',
-        wpm:284, accuracy:90, sessions:9, sessionsThisWeek:2, booksCompleted:6, status:'ontrack',
-        lastActive:'May 12, 2024 • 2:30 PM', notes:'',
-        log:[{book:'Journey to the Stars', date:'May 12 • 2:30 PM', wpm:284, accuracy:90}]
-      },
-      {
-        id: 4, name:'Diego Santos', section:'Section A', color:'#8b6bd1', book:'The Kind Knight',
-        wpm:245, accuracy:88, sessions:8, sessionsThisWeek:1, booksCompleted:4, status:'ontrack',
-        lastActive:'May 11, 2024 • 1:15 PM', notes:'',
-        log:[{book:'The Kind Knight', date:'May 11 • 1:15 PM', wpm:245, accuracy:88}]
-      },
-      {
-        id: 5, name:'Maya Cruz', section:'Section B', color:'#4fa3b8', book:'How Butterflies Are Born',
-        wpm:268, accuracy:92, sessions:11, sessionsThisWeek:2, booksCompleted:7, status:'ontrack',
-        lastActive:'May 11, 2024 • 11:40 AM', notes:'',
-        log:[{book:'How Butterflies Are Born', date:'May 11 • 11:40 AM', wpm:268, accuracy:92}]
-      },
-      {
-        id: 6, name:'Liam Torres', section:'Section B', color:'#ea5d5d', book:'Our Solar System',
-        wpm:190, accuracy:79, sessions:6, sessionsThisWeek:1, booksCompleted:3, status:'support',
-        lastActive:'May 10, 2024 • 4:05 PM', notes:'Struggles with multisyllable words — try daily 10-min drills.',
-        log:[{book:'Our Solar System', date:'May 10 • 4:05 PM', wpm:190, accuracy:79}]
-      },
-      {
-        id: 7, name:'Sofia Delgado', section:'Section B', color:'#6fbf5a', book:'The Grumpy Garden Gnome',
-        wpm:255, accuracy:91, sessions:9, sessionsThisWeek:2, booksCompleted:5, status:'ontrack',
-        lastActive:'May 10, 2024 • 10:20 AM', notes:'',
-        log:[]
-      },
-      {
-        id: 8, name:'Mateo Villanueva', section:'Section B', color:'#f2a13a', book:'The Lion and the Mouse',
-        wpm:210, accuracy:83, sessions:7, sessionsThisWeek:1, booksCompleted:3, status:'ontrack',
-        lastActive:'May 9, 2024 • 3:00 PM', notes:'',
-        log:[]
-      },
-      {
-        id: 9, name:'Ana Bautista', section:'Section C', color:'#8b6bd1', book:'A Rainy Day Surprise',
-        wpm:172, accuracy:75, sessions:5, sessionsThisWeek:0, booksCompleted:2, status:'support',
-        lastActive:'May 6, 2024 • 9:50 AM', notes:'Needs encouragement to keep pace — pairs well with Liam for group reads.',
-        log:[]
-      },
-      {
-        id: 10, name:'Noah Garcia', section:'Section C', color:'#4fa3b8', book:'Journey to the Stars',
-        wpm:302, accuracy:96, sessions:12, sessionsThisWeek:3, booksCompleted:9, status:'ontrack',
-        lastActive:'May 12, 2024 • 9:10 AM', notes:'',
-        log:[]
-      },
-      {
-        id: 11, name:'Camila Flores', section:'Section C', color:'#ea5d5d', book:'The Three Little Pigs',
-        wpm:230, accuracy:87, sessions:8, sessionsThisWeek:1, booksCompleted:4, status:'ontrack',
-        lastActive:'May 8, 2024 • 1:35 PM', notes:'',
-        log:[]
-      },
-      {
-        id: 12, name:'Ethan Morales', section:'Section C', color:'#c9924d', book:'How Butterflies Are Born',
-        wpm:260, accuracy:93, sessions:10, sessionsThisWeek:2, booksCompleted:6, status:'ontrack',
-        lastActive:'May 7, 2024 • 2:15 PM', notes:'',
-        log:[]
-      },
-    ];
-
-    // The database response replaces this demo shape during initialization.
-    // No browser cache is used for roster data, so teachers cannot see another
-    // teacher's students when switching accounts on the same device.
-
-    let nextId = students.reduce((highestId, student)=>Math.max(highestId, Number(student.id)||0), 0) + 1;
+    let students = [];
     let activeFilter = 'all';
     let searchTerm = '';
     let sectionFilter = 'all';
@@ -409,7 +333,7 @@
     // Helpers
     // ============================================================
     function initials(name){
-      return name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase();
+      return name.split(' ').filter(Boolean).map(p=>p[0]).slice(0,2).join('').toUpperCase();
     }
     function escapeHtml(value){
       return String(value).replace(/[&<>"']/g, character=>({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[character]));
@@ -449,19 +373,18 @@
     }
 
     async function loadDatabaseRoster(){
-      try {
-        const response = await fetch('student-api.php');
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Unable to load students');
-        sectionIds = {};
-        result.sections.forEach(section => { sectionIds[section.name] = section.id; });
-        sectionNames = result.sections.map(section => section.name);
-        students = result.students;
-        renderSectionOptions();
-        renderAll();
-      } catch (error) {
-        showToast(error.message);
-      }
+      document.getElementById('addStudentBtn').disabled = true;
+      const response = await fetch('student-api.php');
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Unable to load students');
+      if (!Array.isArray(result.sections) || !Array.isArray(result.students)) throw new Error('Student data is incomplete');
+      sectionIds = {};
+      result.sections.forEach(section => { sectionIds[section.name] = section.id; });
+      sectionNames = result.sections.map(section => section.name);
+      students = result.students;
+      document.getElementById('addStudentBtn').disabled = sectionNames.length === 0;
+      renderSectionOptions();
+      renderAll();
     }
 
     function renderSectionOptions(){
@@ -487,7 +410,7 @@
         sectionSelect.appendChild(filterOption);
 
         const newStudentOption = document.createElement('option');
-        newStudentOption.value = name;
+        newStudentOption.value = sectionIds[name] || '';
         newStudentOption.textContent = name;
         newSection.appendChild(newStudentOption);
       });
@@ -576,7 +499,7 @@
             <div class="sc-id">
               <div class="sc-avatar" style="background:${s.color}">${initials(s.name)}</div>
               <div>
-                <div class="sc-name">${s.name}</div>
+                <div class="sc-name">${escapeHtml(s.name)}</div>
                 <div class="sc-grade">${s.section}</div>
               </div>
             </div>
@@ -634,7 +557,10 @@
         <div class="modal-head">
           <div class="modal-avatar" style="background:${s.color}">${initials(s.name)}</div>
           <div>
-            <h2>${s.name}</h2>
+            <div class="name-row" id="nameRow">
+              <h2 id="detailName">${escapeHtml(s.name)}</h2>
+              <button type="button" class="name-edit-btn" id="editNameBtn" aria-label="Edit student name"><i class='bx bx-edit-alt'></i> Edit name</button>
+            </div>
             <div class="sub">${s.section} • <span class="sc-status ${s.status}" style="padding:3px 8px;">${statusLabel(s)}</span></div>
           </div>
         </div>
@@ -693,6 +619,57 @@
           .then(()=>showToast(`Note saved for ${s.name}`)).catch(error=>showToast(error.message));
       });
       document.getElementById('removeBtn').addEventListener('click', ()=>deactivateStudent(s.id));
+      document.getElementById('editNameBtn').addEventListener('click', ()=>startNameEdit(s));
+    }
+
+    // ------------------------------------------------------------
+    // Edit a student's name (saved through student-api.php,
+    // action "update_student")
+    // ------------------------------------------------------------
+    function startNameEdit(s){
+      const row = document.getElementById('nameRow');
+      row.innerHTML = `
+        <form class="name-edit-form" id="nameEditForm">
+          <input type="text" id="nameEditInput" maxlength="120" value="${escapeHtml(s.name)}" aria-label="Student full name" required>
+          <button type="submit" class="name-save" id="nameSaveBtn"><i class='bx bx-check'></i> Save</button>
+          <button type="button" class="name-cancel" id="nameCancelBtn">Cancel</button>
+        </form>`;
+      const input = document.getElementById('nameEditInput');
+      input.focus();
+      input.select();
+
+      const cancel = ()=>{
+        const notes = document.getElementById('notesArea');
+        if(notes) s.notes = notes.value;   // keep any unsaved note text
+        renderDetail(s);
+      };
+      document.getElementById('nameCancelBtn').addEventListener('click', cancel);
+      input.addEventListener('keydown', e=>{
+        if(e.key==='Escape'){ e.stopPropagation(); cancel(); }   // don't close the whole pop-up
+      });
+
+      document.getElementById('nameEditForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        const newName = input.value.replace(/\s+/g,' ').trim();
+        if(!newName){ showToast('Please enter a name'); return; }
+        if(newName === s.name){ cancel(); return; }
+        // The server rejects duplicate names across the teacher's whole roster, so check the same way here.
+        const clash = students.some(x=>x.id!==s.id && x.name.toLowerCase()===newName.toLowerCase());
+        if(clash){ showToast(`A student named ${newName} already exists`); return; }
+
+        const saveBtn = document.getElementById('nameSaveBtn');
+        saveBtn.disabled = true;
+        databaseRequest({action:'update_student', id:s.id, name:newName})
+          .then(result=>{
+            const notes = document.getElementById('notesArea');
+            if(notes) s.notes = notes.value;
+            s.name = result && result.name ? result.name : newName;   // use the name exactly as the server saved it
+            renderDetail(s);
+            renderAll();
+            showToast('Name updated to ' + s.name);
+          })
+          .catch(error=>{ saveBtn.disabled = false; showToast(error.message); });
+      });
     }
 
     function openDetail(id){
@@ -793,10 +770,14 @@
       e.preventDefault();
       const name = document.getElementById('newName').value.trim();
       if(!name) return;
-      const section = document.getElementById('newSection').value.trim();
+      const sectionId = Number(document.getElementById('newSection').value);
+      if(!Number.isInteger(sectionId) || sectionId < 1){
+        showToast('Choose an available section');
+        return;
+      }
       const book = document.getElementById('newBook').value;
 
-      databaseRequest({action:'save_student', name:name, section_id:sectionIds[section], color:selectedColor, book:book})
+      databaseRequest({action:'save_student', name:name, section_id:sectionId, color:selectedColor, book:book})
         .then(()=>loadDatabaseRoster())
         .then(()=>{ closeAddModal(); showToast(`${name} was added to your class`); })
         .catch(error=>showToast(error.message));
@@ -916,14 +897,6 @@
       }
     });
 
-    const bellBtn = document.getElementById('bellBtn');
-    const bellPanel = document.getElementById('bellPanel');
-    bellBtn.addEventListener('click', e=>{
-      e.stopPropagation();
-      bellPanel.classList.toggle('open');
-      document.getElementById('bellBadge').style.display = 'none';
-    });
-    document.addEventListener('click', ()=>bellPanel.classList.remove('open'));
 
     document.getElementById('tipClose').addEventListener('click', function(){
       this.closest('.tip').style.display = 'none';
@@ -940,7 +913,7 @@
     renderSectionOptions();
     renderAll();
     history.replaceState({section: null}, '', window.location.pathname);
-    loadDatabaseRoster();
+    loadDatabaseRoster().catch(error=>showToast(error.message));
   </script>
   <script src="shared-ui.js"></script>
 </body>

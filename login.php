@@ -1,6 +1,11 @@
 <?php
 require_once __DIR__ . '/auth-guard.php';
 if (current_user()) redirect_for_role(current_user()['role']);
+$requestDraft = $_SESSION['access_request_draft'] ?? [];
+unset($_SESSION['access_request_draft']);
+if (!is_array($requestDraft)) {
+    $requestDraft = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -137,38 +142,6 @@ if (current_user()) redirect_for_role(current_user()['role']);
     margin:0 0 24px 0;
   }
 
-  /* Role tabs: Teacher / Admin only */
-  .role-tabs{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-bottom:24px;
-  }
-  .role-tab{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:6px;
-    padding:14px 8px;
-    border-radius:14px;
-    border:1.5px solid var(--border);
-    background:var(--bg);
-    font-size:12.5px;
-    font-weight:700;
-    color:var(--muted);
-    cursor:pointer;
-    user-select:none;
-    transition:background .15s ease, color .15s ease, border-color .15s ease, transform .12s steps(2);
-  }
-  .role-tab .bx{font-size:19px;}
-  .role-tab:hover{transform:translate(-1px,-1px);}
-  .role-tab.active{
-    background:var(--green-light);
-    color:var(--green-dark);
-    border-color:var(--green);
-  }
-
   /* Divider */
   .divider-row{
     display:flex;align-items:center;gap:12px;
@@ -193,6 +166,7 @@ if (current_user()) redirect_for_role(current_user()['role']);
     padding-left:42px !important;
     border-radius:13px !important;
   }
+  .field-icon-row.password-row input{padding-right:42px !important;}
   .field-icon-row .bx.field-lead{
     position:absolute;left:14px;top:calc(50% + 13px);transform:translateY(-50%);
     font-size:16px;color:var(--muted);pointer-events:none;
@@ -208,6 +182,16 @@ if (current_user()) redirect_for_role(current_user()['role']);
   }
   textarea.form-textarea:focus{border-color:var(--green);}
   .form-row.field-icon-row.textarea-row .bx.field-lead{ top:calc(50% + 13px); transform:translateY(-50%); }
+  .request-feedback-overlay{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(10,20,14,.62);}
+  .request-feedback-overlay.show{display:flex;}
+  .request-feedback-box{position:relative;width:min(100%,440px);padding:28px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 18px 60px rgba(0,0,0,.28);color:var(--ink);}
+  .request-feedback-box h2{margin:0 32px 10px 0;font:700 19px 'Poppins',sans-serif;}
+  .request-feedback-box p{margin:0 0 22px;color:var(--muted);font-size:14px;line-height:1.6;font-weight:600;overflow-wrap:anywhere;}
+  .request-feedback-box .feedback-close{position:absolute;right:16px;top:16px;width:34px;height:34px;border:0;border-radius:50%;background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer;}
+  .request-feedback-box .feedback-ok{width:100%;border:0;border-radius:12px;padding:12px 16px;background:var(--green);color:#16281d;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;}
+  .request-feedback-box.success h2{color:var(--green-dark);}
+  .request-feedback-box.error h2{color:#b42332;}
+  html[data-theme="dark"] .request-feedback-box.error h2{color:#ff929d;}
 
   .row-between{
     display:flex;align-items:center;justify-content:space-between;
@@ -265,8 +249,6 @@ if (current_user()) redirect_for_role(current_user()['role']);
     .auth-brand{margin-bottom:16px;}
     .auth-heading h1{font-size:23px;}
     .auth-heading p{margin-bottom:14px;}
-    .role-tabs{margin-bottom:14px;gap:8px;}
-    .role-tab{flex-direction:row;padding:10px 8px;gap:8px;}
     .access-note{padding:10px 12px;margin-bottom:14px;font-size:11.5px;}
     .form-row label{margin-bottom:5px;}
     .form-row input, .form-row textarea{padding-top:9px;padding-bottom:9px;}
@@ -323,11 +305,11 @@ if (current_user()) redirect_for_role(current_user()['role']);
             <i class='bx bx-envelope field-lead'></i>
             <input type="email" name="email" placeholder="you@school.edu" required>
           </div>
-          <div class="form-row field-icon-row">
+          <div class="form-row field-icon-row password-row">
             <label>Password</label>
             <i class='bx bx-lock-alt field-lead'></i>
             <input type="password" name="password" id="pwInput" placeholder="Enter your password" required>
-            <button type="button" class="field-trail" id="pwToggle" aria-label="Show password"><i class='bx bx-hide'></i></button>
+            <button type="button" class="field-trail" id="pwToggle" aria-label="Show password"><i class='bx bx-show'></i></button>
           </div>
           <div class="row-between">
             <a class="forgot-link">Forgot password?</a>
@@ -348,15 +330,6 @@ if (current_user()) redirect_for_role(current_user()['role']);
           <p>Get your classroom dashboard set up</p>
         </div>
 
-        <div class="role-tabs">
-          <div class="role-tab active" data-role="teacher">
-            <i class='bx bx-chalkboard'></i> Teacher
-          </div>
-          <div class="role-tab" data-role="admin">
-            <i class='bx bx-shield-quarter'></i> Admin
-          </div>
-        </div>
-
         <div class="access-note">
           <i class='bx bx-info-circle'></i>
           <div>
@@ -365,38 +338,45 @@ if (current_user()) redirect_for_role(current_user()['role']);
           </div>
         </div>
 
-        <form id="requestForm" action="auth.php" method="post">
+        <form id="requestForm" action="auth.php" method="post" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="action" value="request_access">
-          <input type="hidden" name="role" id="requestRole" value="teacher">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
           <div class="form-row field-icon-row">
             <label>Full name</label>
             <i class='bx bx-user field-lead'></i>
-            <input type="text" id="reqName" name="name" placeholder="e.g. Maria Hernandez" required>
+            <input type="text" id="reqName" name="name" placeholder="e.g. Maria Hernandez" value="<?= htmlspecialchars((string) ($requestDraft['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
           </div>
           <div class="form-row field-icon-row">
             <label>School email</label>
             <i class='bx bx-envelope field-lead'></i>
-            <input type="email" id="reqEmail" name="email" placeholder="you@school.edu" required>
+            <input type="email" id="reqEmail" name="email" placeholder="you@school.edu" value="<?= htmlspecialchars((string) ($requestDraft['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
           </div>
-          <div class="form-row field-icon-row">
+          <div class="form-row field-icon-row password-row">
             <label>Password</label>
             <i class='bx bx-lock-alt field-lead'></i>
             <input type="password" id="reqPassword" name="password" minlength="8" placeholder="At least 8 characters" autocomplete="new-password" required>
+            <button type="button" class="field-trail" id="reqPasswordToggle" aria-label="Show password"><i class='bx bx-show'></i></button>
           </div>
-          <div class="form-row field-icon-row">
+          <div class="form-row field-icon-row password-row">
             <label>Confirm password</label>
             <i class='bx bx-lock-alt field-lead'></i>
             <input type="password" id="reqPassword2" name="password_confirm" minlength="8" placeholder="Re-enter your password" autocomplete="new-password" required>
+            <button type="button" class="field-trail" id="reqPassword2Toggle" aria-label="Show password"><i class='bx bx-show'></i></button>
           </div>
           <div class="form-row field-icon-row">
             <label>School / institution</label>
             <i class='bx bx-building-house field-lead'></i>
-            <input type="text" id="reqSchool" name="school" placeholder="e.g. Rosewood Elementary" required>
+            <input type="text" id="reqSchool" name="school" placeholder="e.g. Rosewood Elementary" value="<?= htmlspecialchars((string) ($requestDraft['school'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
           </div>
           <div class="form-row field-icon-row textarea-row">
             <label>Reason for access</label>
             <i class='bx bx-message-detail field-lead'></i>
-            <textarea class="form-textarea" id="reqReason" name="reason" placeholder="Tell us about your role and how you'll use ReadPilot..." required></textarea>
+            <textarea class="form-textarea" id="reqReason" name="reason" placeholder="Tell us about your role and how you'll use ReadPilot..." required><?= htmlspecialchars((string) ($requestDraft['reason'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
+          </div>
+          <div class="form-row">
+            <label for="reqIdDocument">Upload a school or work ID</label>
+            <input type="file" id="reqIdDocument" name="id_document" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required>
+            <small>PDF, JPG, or PNG; maximum 5 MB. Only ReadPilot admins can access this file. It is kept until an admin deletes it.</small>
           </div>
           <button type="submit" class="btn-auth">
             Submit Request <i class='bx bx-paper-plane'></i>
@@ -414,6 +394,14 @@ if (current_user()) redirect_for_role(current_user()['role']);
   <div class="toast" id="toast">
     <i class='bx bx-check-circle'></i>
     <span id="toastText">Done!</span>
+  </div>
+  <div class="request-feedback-overlay" id="requestFeedback" role="alertdialog" aria-modal="true" aria-labelledby="requestFeedbackTitle" aria-describedby="requestFeedbackMessage" tabindex="-1">
+    <div class="request-feedback-box error" id="requestFeedbackBox">
+      <button class="feedback-close" id="requestFeedbackClose" type="button" aria-label="Close message">&times;</button>
+      <h2 id="requestFeedbackTitle">Request could not be submitted</h2>
+      <p id="requestFeedbackMessage"></p>
+      <button class="feedback-ok" id="requestFeedbackOk" type="button">Got it</button>
+    </div>
   </div>
 
   <script>
@@ -544,19 +532,6 @@ if (current_user()) redirect_for_role(current_user()['role']);
       frame();
     })();
 
-    // ---- Role tabs (Teacher / Admin) — kept in sync across both views ----
-    var selectedRole = 'teacher';
-    document.querySelectorAll('.role-tab').forEach(function(tab){
-      tab.addEventListener('click', function(){
-        var role = tab.getAttribute('data-role');
-        selectedRole = role;
-        document.getElementById('requestRole').value = role;
-        document.querySelectorAll('.role-tab').forEach(function(t){
-          t.classList.toggle('active', t.getAttribute('data-role') === role);
-        });
-      });
-    });
-
     // ---- Switch between Log In and Request Access views ----
     var viewLogin = document.getElementById('view-login');
     var viewRequest = document.getElementById('view-request');
@@ -568,13 +543,19 @@ if (current_user()) redirect_for_role(current_user()['role']);
     document.getElementById('goToLogin').addEventListener('click', function(){ showView('login'); });
 
     // ---- Password show/hide ----
-    var pwInput = document.getElementById('pwInput');
-    var pwToggle = document.getElementById('pwToggle');
-    pwToggle.addEventListener('click', function(){
-      var showing = pwInput.type === 'text';
-      pwInput.type = showing ? 'password' : 'text';
-      pwToggle.innerHTML = showing ? "<i class='bx bx-hide'></i>" : "<i class='bx bx-show'></i>";
-    });
+    function addPasswordToggle(inputId, buttonId){
+      var input = document.getElementById(inputId);
+      var button = document.getElementById(buttonId);
+      button.addEventListener('click', function(){
+        var showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+        button.innerHTML = showing ? "<i class='bx bx-show'></i>" : "<i class='bx bx-hide'></i>";
+      });
+    }
+    addPasswordToggle('pwInput', 'pwToggle');
+    addPasswordToggle('reqPassword', 'reqPasswordToggle');
+    addPasswordToggle('reqPassword2', 'reqPassword2Toggle');
 
     // ---- Toast helper ----
     var toastEl = document.getElementById('toast');
@@ -585,35 +566,129 @@ if (current_user()) redirect_for_role(current_user()['role']);
       setTimeout(function(){ toastEl.classList.remove('show'); }, 3200);
     }
 
-    // ---- Request form: role + password validation ----
-    document.getElementById('requestForm').addEventListener('submit', function(e){
-      document.getElementById('requestRole').value = selectedRole;
-      var p1 = document.getElementById('reqPassword').value;
-      var p2 = document.getElementById('reqPassword2').value;
-      if (p1.length < 8) { e.preventDefault(); showToast('Password must be at least 8 characters'); return; }
-      if (p1 !== p2)     { e.preventDefault(); showToast('Passwords do not match'); }
+    var requestFeedback = document.getElementById('requestFeedback');
+    var requestFeedbackBox = document.getElementById('requestFeedbackBox');
+    var requestFeedbackTitle = document.getElementById('requestFeedbackTitle');
+    var requestFeedbackMessage = document.getElementById('requestFeedbackMessage');
+    function showRequestFeedback(title, message, type){
+      requestFeedbackTitle.textContent = title;
+      requestFeedbackMessage.textContent = message;
+      requestFeedbackBox.className = 'request-feedback-box ' + (type || 'error');
+      requestFeedback.classList.add('show');
+      document.getElementById('requestFeedbackOk').focus();
+    }
+    function closeRequestFeedback(){
+      requestFeedback.classList.remove('show');
+    }
+    document.getElementById('requestFeedbackOk').addEventListener('click', closeRequestFeedback);
+    document.getElementById('requestFeedbackClose').addEventListener('click', closeRequestFeedback);
+    requestFeedback.addEventListener('click', function(event){
+      if (event.target === requestFeedback) closeRequestFeedback();
+    });
+    document.addEventListener('keydown', function(event){
+      if (event.key === 'Escape' && requestFeedback.classList.contains('show')) closeRequestFeedback();
     });
 
-    // ---- Messages coming back from auth.php (?requested=1 / ?error=password) ----
+    // ---- Request form: validate fields and ID before sending ----
+    var requestForm = document.getElementById('requestForm');
+    requestForm.addEventListener('submit', function(e){
+      if (!requestForm.checkValidity()) {
+        e.preventDefault();
+        var invalidField = requestForm.querySelector(':invalid');
+        showRequestFeedback('Check the request form', invalidField ? invalidField.validationMessage : 'Complete all required fields.');
+        if (invalidField) invalidField.focus();
+        return;
+      }
+      var p1 = document.getElementById('reqPassword').value;
+      var p2 = document.getElementById('reqPassword2').value;
+      if (p1.length < 8) {
+        e.preventDefault();
+        showRequestFeedback('Password is too short', 'Use at least 8 characters for your password.');
+        return;
+      }
+      if (p1 !== p2) {
+        e.preventDefault();
+        showRequestFeedback('Passwords do not match', 'Enter the same password in both password fields.');
+        return;
+      }
+
+      var idInput = document.getElementById('reqIdDocument');
+      var idFile = idInput.files && idInput.files[0];
+      if (!idFile) {
+        e.preventDefault();
+        showRequestFeedback('ID document required', 'Choose a school or work ID file before submitting.');
+        idInput.focus();
+        return;
+      }
+      if (idFile.size > 5 * 1024 * 1024) {
+        e.preventDefault();
+        showRequestFeedback('ID file is too large', 'Choose a PDF, JPG, or PNG file that is 5 MB or smaller.');
+        idInput.focus();
+        return;
+      }
+      var fileExtension = idFile.name.split('.').pop().toLowerCase();
+      if (['pdf', 'jpg', 'jpeg', 'png'].indexOf(fileExtension) === -1) {
+        e.preventDefault();
+        showRequestFeedback('Unsupported ID file', 'Use a PDF, JPG, or PNG file. Photos saved as HEIC must be converted to JPG or PNG first.');
+        idInput.focus();
+        return;
+      }
+    });
+
+    // ---- Persistent request result dialog ----
     (function(){
       var params = new URLSearchParams(window.location.search);
       var err = params.get('error');
       if (params.get('requested') === '1') {
-        showToast('Request submitted! We\'ll review it soon.');
+        showRequestFeedback('Request submitted', 'Your access request and ID document were received. An administrator will review them.', 'success');
       } else if (err === 'password') {
         showView('request');
-        showToast('Passwords must match and be at least 8 characters');
+        showRequestFeedback('Check your password', 'Passwords must match and be at least 8 characters long.');
       } else if (err === 'request') {
         showView('request');
-        showToast('Please fill in all fields with a valid email');
+        showRequestFeedback('Check the request details', 'Enter your name, a valid email address, your school or institution, and a reason for access.');
+      } else if (err === 'csrf') {
+        showView('request');
+        showRequestFeedback('Form expired', 'Refresh the page, reselect your ID document, and submit the request again.');
+      } else if (err === 'request_too_large') {
+        showView('request');
+        showRequestFeedback('Request could not be received', 'The web server rejected the total form upload size before it could read your fields. Reduce the ID file size and try again. If this continues with a file under 5 MB, the server upload limit needs to be increased.');
+      } else if (err === 'id_missing') {
+        showView('request');
+        showRequestFeedback('ID document missing', 'The request arrived without an ID file. Select the file again and resubmit.');
+      } else if (err === 'id_document') {
+        showView('request');
+        showRequestFeedback('ID file could not be read', 'Reselect the file and try again. Supported files are PDF, JPG, and PNG.');
+      } else if (err === 'id_type') {
+        showView('request');
+        showRequestFeedback('Unsupported ID file type', 'The file contents are not a supported PDF, JPG, or PNG. If this is a phone photo saved as HEIC, convert it to JPG or PNG.');
+      } else if (err === 'id_size') {
+        showView('request');
+        showRequestFeedback('ID file is too large', 'Choose a PDF, JPG, or PNG file that is 5 MB or smaller.');
+      } else if (err === 'upload_partial') {
+        showView('request');
+        showRequestFeedback('ID upload was interrupted', 'The server received only part of the file. Check your connection, reselect the ID, and submit again.');
+      } else if (err === 'upload_server') {
+        showView('request');
+        showRequestFeedback('ID upload could not be saved', 'The server could not temporarily receive the file. Contact the site administrator if trying again does not work.');
+      } else if (err === 'upload_blocked') {
+        showView('request');
+        showRequestFeedback('ID upload was blocked', 'The server rejected this upload. Contact the site administrator for help.');
+      } else if (err === 'id_storage') {
+        showView('request');
+        showRequestFeedback('ID could not be stored securely', 'The request was not submitted because the server could not securely save the ID document. Contact the site administrator.');
+      } else if (err === 'database_schema') {
+        showView('request');
+        showRequestFeedback('Access-request setup is incomplete', 'The database needs the ID-upload update before it can accept requests. Ask the administrator to apply the latest database.sql migration.');
       } else if (err === 'database') {
         showView('request');
-        showToast('We could not submit your request. Please try again or contact an administrator.');
+        showRequestFeedback('Request could not be saved', 'A database error stopped the request from being submitted. Your name, email, school, and reason have been kept; reselect your ID and try again. If this continues, contact the site administrator.');
       } else if (err === 'exists') {
-        showToast('An account with that email already exists. Please sign in.');
+        showView('request');
+        showRequestFeedback('Email already registered', 'An account with this email already exists. Sign in with that email or use another address.');
       } else if (err === 'pending') {
         showView('request');
-        showToast('A request for that email is already waiting for review');
+        showRequestFeedback('Request already pending', 'A request for this email is already waiting for administrator review.');
       } else if (err === 'invalid') {
         showToast('Incorrect email or password, or the account is inactive');
       }

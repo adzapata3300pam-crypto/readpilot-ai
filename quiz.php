@@ -111,6 +111,7 @@
   }
   .source-chip.teacher{color:#ffb877;border-color:rgba(255,184,119,.35);background:rgba(255,184,119,.08);}
   .source-chip .bx{font-size:13px;}
+  .source-chip[hidden]{display:none;}
 
   .quiz-area{width:100%;max-width:640px;display:flex;justify-content:center;}
 
@@ -175,6 +176,24 @@
   .q-next.show{display:block;}
   .q-next:hover{background:var(--accent);}
 
+  /* ---------- "No quiz created yet" empty state ---------- */
+  .no-quiz-card{
+    width:100%;
+    background:var(--stage-card);border:1px solid var(--line);border-radius:26px;
+    padding:38px 28px 28px;text-align:center;
+    animation:cardIn .4s cubic-bezier(.2,.9,.25,1.15);
+  }
+  .no-quiz-icon{
+    width:64px;height:64px;border-radius:50%;
+    background:rgba(255,184,119,0.16);color:#ffb877;border:1px solid rgba(255,184,119,.35);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;font-size:30px;
+  }
+  .no-quiz-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:20px;margin:0 0 8px;}
+  .no-quiz-text{font-size:13.5px;font-weight:700;color:var(--muted);line-height:1.6;margin:0 0 22px;}
+  .no-quiz-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .no-quiz-actions .full{grid-column:1 / -1;}
+
   /* ---------- Quiz results card (mirrors results.php) ---------- */
   .quiz-results-card{
     width:100%;
@@ -217,6 +236,9 @@
   .qr-btn.secondary:hover{background:var(--chip-bg-hover);}
   .qr-btn.primary{background:var(--accent-strong);border-color:var(--accent-strong);color:var(--on-accent);}
   .qr-btn.primary:hover{background:var(--accent);}
+  .qr-btn.report{background:var(--chip-bg);border-color:rgba(143,214,124,.4);color:var(--accent);}
+  .qr-btn[hidden]{display:none;}
+  .qr-save-status{grid-column:1 / -1;min-height:16px;font-size:11.5px;font-weight:700;color:var(--muted);}
 
   /* ---------- Bottom bar ---------- */
   .bottombar{
@@ -342,8 +364,6 @@
   }
   .bf-save{background:var(--accent-strong);border-color:var(--accent-strong);color:var(--on-accent);}
   .bf-save:hover{background:var(--accent);}
-  .bf-reset{background:transparent;color:var(--ink);}
-  .bf-reset:hover{background:var(--chip-bg-hover);}
   .bf-clear{background:transparent;color:var(--red);border-color:rgba(234,93,93,.35);}
   .bf-clear:hover{background:rgba(234,93,93,.1);}
 
@@ -378,14 +398,14 @@
     <div class="stage">
       <div class="stage-head">
         <div class="meta-label" id="metaLabel">Loading story...</div>
-        <div class="source-chip" id="sourceChip"><i class='bx bx-magic-wand'></i> Auto-generated quiz</div>
+        <div class="source-chip teacher" id="sourceChip" hidden><i class='bx bx-chalkboard'></i> Teacher's quiz</div>
       </div>
 
       <div class="quiz-area" id="quizArea"></div>
     </div>
 
     <div class="bottombar">
-      <div class="q-count" id="qCount">Question 1 / 1</div>
+      <div class="q-count" id="qCount">Question 0 / 0</div>
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
       <div class="score-chip" id="scoreChip">Score: 0 / 0</div>
     </div>
@@ -401,7 +421,7 @@
     </div>
     <div class="builder-body" id="builderBody">
       <div class="builder-hint">
-        Edit the auto-generated questions below, delete ones you don't want, or add your own. Save when you're ready — students will see exactly this quiz.
+        Edit the questions below, delete ones you don't want, or add your own. Save when you're ready — students will see exactly this quiz.
       </div>
       <div id="builderList"></div>
       <button class="qb-add-btn" id="qbAddBtn"><i class='bx bx-plus'></i> Add a question</button>
@@ -422,7 +442,6 @@
     </div>
     <div class="builder-foot">
       <button class="bf-save" id="bfSave"><i class='bx bx-save'></i> Save &amp; Use This Quiz</button>
-      <button class="bf-reset" id="bfReset"><i class='bx bx-refresh'></i> Reset to Auto-Generated</button>
       <button class="bf-clear" id="bfClear"><i class='bx bx-trash'></i> Clear Saved Quiz</button>
     </div>
   </div>
@@ -462,7 +481,7 @@
 
   /* =====================================================================
      Load the story this quiz is about. Priority:
-     1. 'readpilot-quiz-story'    — handed off from results.php ("Take the Quiz")
+     1. 'readpilot-quiz-story'    — handed off from resources.php / results.php
      2. 'readpilot-reading-session' — the story currently loaded in reading.php
      3. A small demo story, so this page still works if opened directly.
   ===================================================================== */
@@ -472,17 +491,7 @@
     genre: "Fable",
     lines: [
       "A lion was asleep in the forest one quiet afternoon.",
-      "A tiny mouse scurried across his paw and woke him up.",
-      "The lion opened one eye and let out an angry roar.",
-      "He grabbed the mouse in his big paw, ready to eat him.",
-      "Please let me go, squeaked the mouse. One day I might help you too.",
-      "The lion laughed at the idea, but he let the little mouse go free.",
-      "A few days later, the lion got tangled in a hunters net.",
-      "He roared and roared, but the ropes only pulled tighter.",
-      "The tiny mouse heard him and came running as fast as he could.",
-      "With his sharp little teeth, the mouse chewed through the ropes and set the lion free.",
-      "You laughed when I said I could help you, said the mouse with a smile.",
-      "Now you know that even the smallest friend can make the biggest difference."
+      "A tiny mouse scurried across his paw and woke him up."
     ]
   };
 
@@ -493,7 +502,7 @@
     const raw = fromResults || fromReading;
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.lines) && parsed.lines.length) story = parsed;
+      if (parsed && (Array.isArray(parsed.lines) || Array.isArray(parsed.customQuestions))) story = parsed;
     }
   } catch (e) { /* storage unavailable — use demo story */ }
 
@@ -510,26 +519,6 @@
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   }
-
-  /* =====================================================================
-     AUTO QUIZ GENERATOR
-     Rule-based, entirely client-side — no external calls. It builds a mix
-     of question types straight from the story's own sentences:
-       - fill-in-the-blank (a content word removed from a real line)
-       - true/false recall (a real line, sometimes with one word swapped)
-       - "which happens first" ordering
-       - "what happens next" comprehension
-  ===================================================================== */
-  const STOPWORDS = new Set(['a','an','the','and','but','or','nor','in','on','at','to','of','was','were','is','are',
-    'he','she','it','they','his','her','their','with','for','that','this','as','had','has','have','one','two',
-    'big','little','up','down','out','near','from','by','so','too','then','when','while','before','after','than',
-    'into','over','under','about','again','once','more','most','some','such','no','not','only','own','same','very',
-    'just','now','all','be','been','being','you','your','yours','them','him','i','me','my']);
-
-  function cleanWord(w){ return (w || '').replace(/[^a-zA-Z']/g, ''); }
-  function contentWords(line){
-    return line.split(/\s+/).map(cleanWord).filter(w => w.length > 3 && !STOPWORDS.has(w.toLowerCase()));
-  }
   function shuffle(arr){
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--){
@@ -538,122 +527,42 @@
     }
     return a;
   }
-  function pick(arr, n){ return shuffle(arr).slice(0, n); }
 
-  function replaceWordInLine(line, targetWord){
-    const tokens = line.split(/\s+/);
-    for (let i = 0; i < tokens.length; i++){
-      if (cleanWord(tokens[i]) === targetWord){ tokens[i] = '_____'; return tokens.join(' '); }
-    }
-    return line;
-  }
-  function swapWordInLine(line, targetWord, replacement){
-    const tokens = line.split(/\s+/);
-    for (let i = 0; i < tokens.length; i++){
-      if (cleanWord(tokens[i]) === targetWord){
-        const trailing = (tokens[i].match(/[.,!?;:"')]+$/) || [''])[0];
-        tokens[i] = replacement + trailing;
-        return tokens.join(' ');
+  /* =====================================================================
+     QUESTION FORMAT
+     resources.php stores teacher quizzes as
+       { prompt, options: ['text', ...], correctIndex, explanation }
+     while this page renders
+       { prompt, options: [{id, text}, ...], correctOptionId, explanation }
+     normalizeQuestions() accepts either shape.
+     There is NO auto-generated quiz any more: a quiz only exists if a
+     teacher created one.
+  ===================================================================== */
+  function normalizeQuestions(list){
+    if (!Array.isArray(list)) return [];
+    const out = [];
+    list.forEach((q, qi) => {
+      if (!q || typeof q.prompt !== 'string' || !Array.isArray(q.options) || q.options.length < 2) return;
+      let options, correctOptionId;
+      if (typeof q.options[0] === 'string'){
+        options = q.options.map((text, i) => ({ id: String.fromCharCode(97 + i), text: String(text) }));
+        const ci = Number(q.correctIndex);
+        if (!Number.isInteger(ci) || ci < 0 || ci >= options.length) return;
+        correctOptionId = options[ci].id;
+      } else {
+        options = q.options.map((o, i) => ({ id: String((o && o.id) || String.fromCharCode(97 + i)), text: String((o && o.text) || '') }));
+        correctOptionId = q.correctOptionId;
+        if (!options.some(o => o.id === correctOptionId)) return;
       }
-    }
-    return line;
-  }
-  function makeOptionSet(correctText, distractorTexts){
-    const options = shuffle([correctText, ...distractorTexts]).map((text, i) => ({ id: String.fromCharCode(97 + i), text }));
-    const correctOptionId = options.find(o => o.text === correctText).id;
-    return { options, correctOptionId };
-  }
-
-  function generateQuizFromStory(lines){
-    const qs = [];
-    if (!lines || !lines.length) return qs;
-
-    const wordPool = [];
-    lines.forEach((line, li) => contentWords(line).forEach(w => wordPool.push({ word: w, line: li })));
-
-    // ---- Fill in the blank ----
-    const blankLines = shuffle(lines.map((l, i) => i)).filter(i => contentWords(lines[i]).length > 0);
-    blankLines.slice(0, 3).forEach(li => {
-      const words = contentWords(lines[li]);
-      const answer = words[Math.floor(Math.random() * words.length)];
-      const distractorPool = [...new Set(wordPool.map(w => w.word))].filter(w => w.toLowerCase() !== answer.toLowerCase());
-      if (distractorPool.length < 3) return;
-      const distractors = pick(distractorPool, 3);
-      const { options, correctOptionId } = makeOptionSet(answer, distractors);
-      qs.push({
-        id: 'fill-' + li,
-        prompt: 'Fill in the blank: "' + replaceWordInLine(lines[li], answer) + '"',
-        options, correctOptionId,
-        explanation: 'The full sentence is: "' + lines[li] + '"'
+      out.push({
+        id: q.id || ('q-' + qi),
+        prompt: q.prompt,
+        options,
+        correctOptionId,
+        explanation: q.explanation || ''
       });
     });
-
-    // ---- True / False recall ----
-    shuffle(lines.map((l, i) => i)).slice(0, 3).forEach((li, k) => {
-      let statement = lines[li];
-      let isTrue = true;
-      if (Math.random() < 0.5 && lines.length > 1){
-        const myWords = contentWords(lines[li]);
-        const otherWords = wordPool.filter(w => w.line !== li).map(w => w.word);
-        if (myWords.length && otherWords.length){
-          const swapWord = myWords[Math.floor(Math.random() * myWords.length)];
-          const replacement = otherWords[Math.floor(Math.random() * otherWords.length)];
-          const swapped = swapWordInLine(lines[li], swapWord, replacement);
-          if (swapped !== lines[li]){ statement = swapped; isTrue = false; }
-        }
-      }
-      qs.push({
-        id: 'tf-' + li + '-' + k,
-        prompt: 'True or False: "' + statement + '" is a sentence from the story.',
-        options: [{ id: 't', text: 'True' }, { id: 'f', text: 'False' }],
-        correctOptionId: isTrue ? 't' : 'f',
-        explanation: isTrue
-          ? 'Correct \u2014 that sentence appears in the story as written.'
-          : 'Not quite \u2014 the story actually says: "' + lines[li] + '"'
-      });
-    });
-
-    // ---- Which happens first ----
-    if (lines.length >= 4){
-      const used = new Set();
-      let added = 0, attempts = 0;
-      while (added < 2 && attempts < 30){
-        attempts++;
-        const i = Math.floor(Math.random() * lines.length);
-        const j = Math.floor(Math.random() * lines.length);
-        if (i === j || Math.abs(i - j) < 2) continue;
-        const first = Math.min(i, j), second = Math.max(i, j);
-        const key = first + '-' + second;
-        if (used.has(key)) continue;
-        used.add(key);
-        const { options, correctOptionId } = makeOptionSet(lines[first], [lines[second]]);
-        qs.push({
-          id: 'order-' + key,
-          prompt: 'Which of these happens first in the story?',
-          options, correctOptionId,
-          explanation: '"' + lines[first] + '" comes before "' + lines[second] + '" in the story.'
-        });
-        added++;
-      }
-    }
-
-    // ---- What happens next ----
-    if (lines.length >= 3){
-      shuffle(lines.map((l, i) => i).filter(i => i < lines.length - 1)).slice(0, 2).forEach(li => {
-        const correct = lines[li + 1];
-        const distractorIdx = shuffle(lines.map((l, i) => i).filter(i => i !== li && i !== li + 1)).slice(0, 2);
-        if (distractorIdx.length < 2) return;
-        const { options, correctOptionId } = makeOptionSet(correct, distractorIdx.map(i => lines[i]));
-        qs.push({
-          id: 'next-' + li,
-          prompt: 'What happens right after: "' + lines[li] + '"',
-          options, correctOptionId,
-          explanation: 'Right \u2014 the next line in the story is: "' + correct + '"'
-        });
-      });
-    }
-
-    return shuffle(qs);
+    return out;
   }
 
   /* =====================================================================
@@ -665,7 +574,10 @@
       const raw = localStorage.getItem(QUIZ_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.questions) && parsed.questions.length) return parsed;
+      if (parsed && Array.isArray(parsed.questions)){
+        const qs = normalizeQuestions(parsed.questions);
+        if (qs.length) return qs;
+      }
     } catch (e) {}
     return null;
   }
@@ -683,31 +595,21 @@
      Active quiz state (what the student is currently taking)
   ===================================================================== */
   let activeQuestions = [];
-  let quizSource = 'auto';
   let qIndex = 0;
   let score = 0;
   let answered = false;
 
   const sourceChip = document.getElementById('sourceChip');
   function updateSourceChip(){
-    if (quizSource === 'teacher'){
-      sourceChip.className = 'source-chip teacher';
-      sourceChip.innerHTML = "<i class='bx bx-chalkboard'></i> Teacher's quiz";
-    } else {
-      sourceChip.className = 'source-chip';
-      sourceChip.innerHTML = "<i class='bx bx-magic-wand'></i> Auto-generated quiz";
-    }
+    sourceChip.hidden = !activeQuestions.length;
   }
 
   function loadActiveQuiz(){
-    const custom = loadCustomQuiz();
-    if (custom){
-      activeQuestions = custom.questions;
-      quizSource = 'teacher';
-    } else {
-      activeQuestions = generateQuizFromStory(story.lines);
-      quizSource = 'auto';
-    }
+    // 1. Quiz handed over from resources.php (the one the teacher created there)
+    let qs = normalizeQuestions(story.customQuestions);
+    // 2. A quiz saved from this page's own builder
+    if (!qs.length) qs = loadCustomQuiz() || [];
+    activeQuestions = qs;
     updateSourceChip();
   }
 
@@ -716,15 +618,34 @@
   const progressFillEl = document.getElementById('progressFill');
   const scoreChipEl = document.getElementById('scoreChip');
 
+  function renderNoQuiz(){
+    qCountEl.textContent = 'Question 0 / 0';
+    progressFillEl.style.width = '0%';
+    scoreChipEl.textContent = 'Score: 0 / 0';
+    quizArea.innerHTML = `
+      <div class="no-quiz-card">
+        <div class="no-quiz-icon"><i class='bx bx-info-circle'></i></div>
+        <h2 class="no-quiz-title">No quiz created yet</h2>
+        <p class="no-quiz-text">
+          There is no quiz for <b>${escapeHtml(story.title)}</b> yet.
+          Create one in the Create Quiz tab (or use Build Your Own Quiz above), then come back and try again.
+        </p>
+        <div class="no-quiz-actions">
+          <button class="qr-btn secondary" id="noQuizBuildBtn"><i class='bx bx-edit-alt'></i> Build Your Own Quiz</button>
+          <a class="qr-btn primary" href="resources.php"><i class='bx bx-library'></i> Back to Library</a>
+        </div>
+      </div>
+    `;
+    document.getElementById('noQuizBuildBtn').addEventListener('click', openBuilder);
+  }
+
   function startQuiz(){
     qIndex = 0;
     score = 0;
     answered = false;
+    updateSourceChip();
     if (!activeQuestions.length){
-      quizArea.innerHTML = '<div class="q-card"><div class="q-prompt">This story is too short to build a quiz from yet. Try Teacher Mode to add your own questions.</div></div>';
-      qCountEl.textContent = 'Question 0 / 0';
-      progressFillEl.style.width = '0%';
-      scoreChipEl.textContent = 'Score: 0 / 0';
+      renderNoQuiz();
       return;
     }
     renderQuestion();
@@ -812,7 +733,9 @@
         <div class="qr-actions">
           <button class="qr-btn secondary" id="retakeBtn"><i class='bx bx-refresh'></i> Retake Quiz</button>
           <button class="qr-btn secondary" id="readAgainBtn"><i class='bx bx-book-open'></i> Read Again</button>
+          <a class="qr-btn report full" id="quizReportBtn" href="#" hidden><i class='bx bx-file'></i> View Quiz Report</a>
           <a class="qr-btn primary full" href="resources.php"><i class='bx bx-library'></i> Back to Library</a>
+          <div class="qr-save-status" id="quizSaveStatus" aria-live="polite"></div>
         </div>
       </div>
     `;
@@ -831,17 +754,33 @@
       const sessId = qParams.get('session_id') || (story && story.sessionId) || '';
       const postBody = {action:'record_quiz', student_id:story.studentId, title:story.title, score:score, total_questions:total};
       if (sessId) postBody.session_id = sessId;
-      fetch('student-api.php', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams(postBody)}).catch(() => {});
+      const saveStatus = document.getElementById('quizSaveStatus');
+      saveStatus.textContent = 'Saving quiz result and preparing the teacher report…';
+      fetch('student-api.php', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams(postBody)})
+        .then(response=>response.json().then(data=>({ok:response.ok,data})))
+        .then(result=>{
+          if(!result.ok || !result.data.ok || !result.data.quiz_report_id){
+            throw new Error(result.data.error || 'Could not save this quiz report.');
+          }
+          const reportLink = document.getElementById('quizReportBtn');
+          reportLink.href = 'quiz-report.php?attempt_id=' + encodeURIComponent(result.data.quiz_report_id);
+          reportLink.hidden = false;
+          saveStatus.textContent = 'Quiz report saved for the teacher.';
+        })
+        .catch(error=>{
+          saveStatus.textContent = error.message + ' Please notify the teacher so the quiz can be saved.';
+        });
+    } else {
+      document.getElementById('quizSaveStatus').textContent = 'This practice quiz is not linked to a student, so no teacher report was saved.';
     }
 
   }
 
-  loadActiveQuiz();
-  startQuiz();
-
-  /* ══════════════════════════════════════════════════════
+  /* =====================================================================
      TEACHER QUIZ BUILDER
-     ══════════════════════════════════════════════════════ */
+     (declared before the first startQuiz() so the empty-state button can
+     open it)
+  ===================================================================== */
   const builderPanel = document.getElementById('builderPanel');
   const builderList = document.getElementById('builderList');
   const qbForm = document.getElementById('qbForm');
@@ -852,8 +791,8 @@
   let builderQuestions = []; // working copy while the panel is open
 
   function openBuilder(){
-    // Start the builder from whatever quiz is currently active, so the
-    // teacher edits/extends it rather than starting from nothing.
+    // Start the builder from whatever quiz is currently active (empty if
+    // none has been created yet).
     builderQuestions = JSON.parse(JSON.stringify(activeQuestions));
     renderBuilderList();
     hideQbForm();
@@ -984,29 +923,26 @@
     if (!builderQuestions.length){ showToast('Add at least one question before saving'); return; }
     saveCustomQuiz(builderQuestions);
     activeQuestions = shuffle(JSON.parse(JSON.stringify(builderQuestions)));
-    quizSource = 'teacher';
-    updateSourceChip();
     closeBuilder();
     startQuiz();
     showToast('Saved \u2014 students will now see this quiz');
   });
 
-  document.getElementById('bfReset').addEventListener('click', () => {
-    builderQuestions = generateQuizFromStory(story.lines);
-    renderBuilderList();
-    hideQbForm();
-    showToast('Reset to the auto-generated questions');
-  });
-
   document.getElementById('bfClear').addEventListener('click', () => {
     clearCustomQuiz();
+    // Also drop the quiz that came in from resources.php for this session,
+    // so "clear" really leaves the story with no quiz.
+    story.customQuestions = null;
     loadActiveQuiz();
     startQuiz();
     closeBuilder();
-    showToast('Saved quiz cleared \u2014 back to auto-generated');
+    showToast('Saved quiz cleared');
   });
 
   resetQbOptions();
+
+  loadActiveQuiz();
+  startQuiz();
 </script>
 <script src="shared-ui.js"></script>
 </body>

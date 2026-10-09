@@ -205,6 +205,17 @@
   .status-pill.ontrack{background:var(--green-light);color:var(--green-dark);}
   .status-pill.support{background:var(--red-light);color:var(--red);}
   .status-pill.unknown{background:var(--bg);color:var(--muted);}
+  .profile-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto;}
+  .quiz-reports-btn{
+    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;padding:6px 14px;
+    border-radius:20px;white-space:nowrap;text-decoration:none;font-family:inherit;
+    background:var(--green-light);color:var(--green-dark);border:1px solid rgba(111,191,90,0.35);cursor:pointer;
+    transition:background .15s ease, transform .12s ease;
+  }
+  .quiz-reports-btn .bx{font-size:14px;}
+  .quiz-reports-btn:hover{background:var(--green);color:#fff;transform:translateY(-1px);}
+  .quiz-reports-btn.disabled{background:var(--bg);color:var(--muted);border-color:var(--border);cursor:not-allowed;}
+  .quiz-reports-btn.disabled:hover{background:var(--bg);color:var(--muted);transform:none;}
 
   /* ---------- Progress summary (improved or not) ---------- */
   .verdict{display:flex;align-items:center;gap:14px;border-radius:14px;padding:16px 18px;margin-bottom:16px;}
@@ -341,13 +352,42 @@
   .modal-ai-field{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:6px;}
   .modal-ai-field b{color:var(--ink);font-weight:700;}
   .modal-ai-field.advice{padding:8px 10px;background:var(--card);border-radius:9px;border-left:3px solid var(--green);margin-top:8px;}
-  .ai-summary-card{
-    margin-top:14px;background:linear-gradient(135deg, rgba(111,191,90,0.12), rgba(79,163,184,0.08));
-    border:1px solid rgba(111,191,90,0.3);border-radius:14px;padding:16px 18px;
+
+  /* ---------- AI Assistant card (large, simple, action-first) ---------- */
+  .ai-help{
+    display:block !important;           /* keeps it stacked even if another stylesheet uses flex */
+    margin-top:18px;border-radius:16px;padding:22px 24px;
+    background:var(--card);border:2px solid var(--green);
+    box-shadow:var(--shadow);
   }
-  .ai-summary-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
-  .ai-summary-title{font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:6px;}
-  html[data-theme="dark"] .ai-summary-title{color:var(--green);}
+  .ai-help.needs_intervention{border-color:var(--red);}
+  .ai-help.steady{border-color:var(--teal);}
+
+  .ai-help-top{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+  .ai-help-top .bx{font-size:30px;width:52px;height:52px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    background:var(--green-light);color:var(--green-dark);}
+  .ai-help.needs_intervention .ai-help-top .bx{background:var(--red-light);color:var(--red);}
+  .ai-help.steady .ai-help-top .bx{background:var(--teal-light);color:var(--teal);}
+  .ai-help-eyebrow{font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+  .ai-help-headline{font-family:'Poppins',sans-serif;font-size:21px;font-weight:700;color:var(--ink);line-height:1.25;}
+
+  .ai-help-action{background:var(--green-light);border-left:6px solid var(--green);
+    border-radius:12px;padding:16px 18px;margin-bottom:18px;}
+  .ai-help.needs_intervention .ai-help-action{background:var(--red-light);border-left-color:var(--red);}
+  .ai-help.steady .ai-help-action{background:var(--teal-light);border-left-color:var(--teal);}
+  .ai-help-action-label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--ink);margin-bottom:6px;}
+  .ai-help-action p{margin:0;font-size:16.5px;line-height:1.6;font-weight:700;color:var(--ink);}
+
+  .ai-help-section{margin-bottom:14px;}
+  .ai-help-section h4{margin:0 0 4px;font-size:14px;font-weight:800;color:var(--muted);}
+  .ai-help-section p{margin:0;font-size:15.5px;line-height:1.65;color:var(--ink);font-weight:600;}
+
+  .ai-help-more{margin-top:6px;}
+  .ai-help-more summary{cursor:pointer;font-size:14.5px;font-weight:800;color:var(--green-dark);padding:8px 0;}
+  .ai-help-more p{margin:6px 0 0;font-size:14.5px;line-height:1.6;color:var(--ink);font-weight:600;}
+
+  html[data-theme="dark"] .ai-help-more summary{color:var(--green);}
 
   .detail-line{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:600;padding:9px 0;border-top:1px solid var(--border);}
   .detail-line svg{width:14px;height:14px;color:var(--green-dark);flex-shrink:0;}
@@ -416,7 +456,7 @@
   @media (prefers-reduced-motion: reduce){.pixel-plane{display:none;}}
 
   @media print{
-    .sidebar, .btn-new, .btn-outline, .tip, .back-link, .switcher{display:none !important;}
+    .sidebar, .btn-new, .btn-outline, .tip, .back-link, .switcher, .quiz-reports-btn{display:none !important;}
     .main{padding:0;max-width:100%;margin:0;width:100%;}
     body{display:block;background:#fff;}
     .panel, .profile-card{box-shadow:none;border:1px solid #ddd;}
@@ -528,10 +568,7 @@
 
   <!-- ================= MAIN ================= -->
   <main class="main">
-    <a class="back-link" href="reports.php">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="M18 12H6"/></svg>
-      Back to Reports
-    </a>
+    <a class="back-link" href="reports.php"></a>
 
     <div class="topbar">
       <div class="title-block">
@@ -747,6 +784,7 @@
     const bookTitles = ['The Lion and the Mouse','The Three Little Pigs','Journey to the Stars','A Rainy Day Surprise','The Ugly Duckling',"Charlotte's Web (excerpt)",'The Tortoise and the Hare','Goldilocks and the Three Bears','The Little Red Hen','The Boy Who Cried Wolf','Jack and the Beanstalk','The Fox and the Grapes','The Little Mermaid (retold)'];
 
     let sessions = [];
+    let quizReports = [];
     (function generateSessions(){
       let id = 1;
       roster.forEach(student=>{
@@ -882,13 +920,25 @@
       const status = studentSessions.length===0 ? 'unknown' : (accuracy < 82 ? 'support' : 'ontrack');
       const statusLabel = status==='support' ? 'Needs Support' : (status==='ontrack' ? 'On Track' : 'No Sessions Yet');
 
+      // Most recent quiz attempt for this student -> opens the full quiz report
+      // history (quiz-report.php lists every attempt for the student).
+      const latestQuiz = quizReports
+        .filter(report=>report.studentId===currentStudentId)
+        .sort((a,b)=>b.ts-a.ts)[0];
+      const quizBtn = latestQuiz
+        ? `<a class="quiz-reports-btn" href="quiz-report.php?attempt_id=${encodeURIComponent(latestQuiz.attempt_id)}"><i class='bx bx-brain'></i> View Quiz Reports</a>`
+        : `<span class="quiz-reports-btn disabled" title="This student has not taken a quiz yet"><i class='bx bx-brain'></i> View Quiz Reports</span>`;
+
       document.getElementById('profileCard').innerHTML = `
         <div class="profile-avatar" style="background:${esc(student.color)}">${initials(student.name)}</div>
         <div class="profile-info">
           <div class="profile-name">${esc(student.name)}</div>
           <div class="profile-sub">${esc(student.section || 'Unassigned')} • ${studentSessions.length} session${studentSessions.length===1?'':'s'} logged</div>
         </div>
-        <div class="status-pill ${status}">${statusLabel}</div>
+        <div class="profile-actions">
+          ${quizBtn}
+          <div class="status-pill ${status}">${statusLabel}</div>
+        </div>
       `;
 
       document.getElementById('newModalAvatar').style.background = student.color;
@@ -995,16 +1045,41 @@
         ${(()=>{
           const latestAi = sorted.slice().reverse().find(s => s.ai_narrative);
           if(!latestAi) return '';
+          const AI_STATUS = {
+            rapid_growth:       {label:'Doing great — growing fast',  icon:'bx-trending-up'},
+            on_track:           {label:'On track',                    icon:'bx-check-circle'},
+            steady:             {label:'Making steady progress',      icon:'bx-time-five'},
+            needs_intervention: {label:'Needs extra help',            icon:'bx-error-circle'}
+          };
+          const key = AI_STATUS[latestAi.ai_status] ? latestAi.ai_status : 'on_track';
+          const st = AI_STATUS[key];
           return `
-            <div class="ai-summary-card">
-              <div class="ai-summary-header">
-                <div class="ai-summary-title"><i class='bx bxs-brain'></i> AI Literacy Trajectory Assessment</div>
-                <span class="ai-status-pill ${latestAi.ai_status || 'on_track'}">${(latestAi.ai_status || 'on_track').replace('_',' ')}</span>
+            <section class="ai-help ${key}">
+              <div class="ai-help-top">
+                <i class='bx ${st.icon}'></i>
+                <div>
+                  <div class="ai-help-eyebrow">AI Reading Assistant says</div>
+                  <div class="ai-help-headline">${st.label}</div>
+                </div>
               </div>
-              <div style="font-size:13px;line-height:1.55;color:var(--ink);margin-bottom:8px;">${esc(latestAi.ai_narrative)}</div>
-              ${latestAi.ai_phonics ? `<div style="font-size:12px;color:var(--muted);margin-bottom:4px;"><b style="color:var(--ink);">Phonics Observation:</b> ${esc(latestAi.ai_phonics)}</div>` : ''}
-              ${latestAi.ai_next_step ? `<div style="font-size:12px;color:var(--muted);"><b style="color:var(--ink);">Recommended Action:</b> ${esc(latestAi.ai_next_step)}</div>` : ''}
-            </div>
+
+              ${latestAi.ai_next_step ? `
+              <div class="ai-help-action">
+                <div class="ai-help-action-label"><i class='bx bx-bulb'></i> What to do next</div>
+                <p>${esc(latestAi.ai_next_step)}</p>
+              </div>` : ''}
+
+              <div class="ai-help-section">
+                <h4>What we noticed</h4>
+                <p>${esc(latestAi.ai_narrative)}</p>
+              </div>
+
+              ${latestAi.ai_phonics ? `
+              <details class="ai-help-more">
+                <summary>Show word-reading details</summary>
+                <p>${esc(latestAi.ai_phonics)}</p>
+              </details>` : ''}
+            </section>
           `;
         })()}
         <div class="sum-sub" style="margin-top:12px;">“Start” is the average of the first ${n} session${n===1?'':'s'}; “now” is the average of the latest ${n}.</div>
@@ -1225,6 +1300,7 @@
         btn.style.display = 'none';
       }
     }
+
     document.getElementById('loadMoreBtn').addEventListener('click', ()=>{
       visibleCount += PAGE_SIZE;
       renderAll();
@@ -1431,6 +1507,16 @@
       roster = liveRoster;
       sessions = Array.isArray(result.sessions)
         ? result.sessions.map(normSession).filter(s=>!isNaN(s.studentId))
+        : [];
+      quizReports = Array.isArray(result.quiz_reports)
+        ? result.quiz_reports.map(report=>({
+            ...report,
+            attempt_id:Number(report.attempt_id),
+            studentId:Number(report.studentId),
+            score:Number(report.score),
+            total_questions:Number(report.total_questions),
+            ts:normTs(report.ts)
+          })).filter(report=>!isNaN(report.studentId))
         : [];
       return true;
     }

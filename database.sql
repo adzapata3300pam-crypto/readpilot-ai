@@ -165,6 +165,23 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
   CONSTRAINT fk_attempt_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS quiz_ai_reports (
+  quiz_attempt_id BIGINT UNSIGNED PRIMARY KEY,
+  teacher_id INT UNSIGNED NOT NULL,
+  student_id INT UNSIGNED NOT NULL,
+  reading_session_count INT UNSIGNED NOT NULL DEFAULT 0,
+  reading_wpm SMALLINT UNSIGNED NULL,
+  reading_accuracy TINYINT UNSIGNED NULL,
+  summary TEXT NOT NULL,
+  recommendation TEXT NOT NULL,
+  model_name VARCHAR(80) NOT NULL DEFAULT 'readpilot-quiz-insight-engine',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_quiz_report_student_created (teacher_id, student_id, created_at),
+  CONSTRAINT fk_quiz_report_attempt FOREIGN KEY (quiz_attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
+  CONSTRAINT fk_quiz_report_teacher FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_quiz_report_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS resources (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(190) NOT NULL UNIQUE,
@@ -226,7 +243,13 @@ VALUES
  ('How Butterflies Are Born','Dr. Elena Ford','Nonfiction','Grade 3','540L',860,'A step-by-step look at metamorphosis, from egg to caterpillar to butterfly','["Nonfiction","Science"]',NULL),
  ('The Kind Knight','Owen Park','Fantasy','Grade 3','470L',690,'A knight who would rather solve problems with kindness than a sword','["Fiction","Fantasy"]',NULL),
  ('Our Solar System','NASA Kids (adapted)','Nonfiction','Grade 3–4','600L',1100,'An overview of the eight planets and what makes each one unique','["Nonfiction","Space"]',NULL),
- ('The Grumpy Garden Gnome','Nora Bell','Fantasy','Grade 3','440L',640,'A gnome who dislikes visitors learns the value of good company','["Fiction","Fantasy","Humor"]',NULL);
+ ('The Grumpy Garden Gnome','Nora Bell','Fantasy','Grade 3','440L',640,'A gnome who dislikes visitors learns the value of good company','["Fiction","Fantasy","Humor"]',NULL),
+ ('The Garden That Grew Together','ReadPilot','Realistic Fiction','Grade 3','520L',109,'Neighbors revive a shared garden by planning together and taking turns caring for it','["Fiction","Community","Intermediate"]','["On Saturday, the neighborhood garden looked smaller than Ana remembered.","Three days of hot sun had dried the soil.","The bean leaves drooped beside their empty watering can.","Ana asked the neighbors what they could do.","Mr. Lee suggested collecting rain in clean barrels.","The children measured the roof to find a safe place for one barrel.","Ms. Ortiz checked the plan before they filled it.","Then each family chose one day to water the beds.","A week later, the beans stood tall again.","Tiny white flowers opened near the fence.","At harvest time, everyone brought a basket.","The garden had grown because each person shared a small job."]'),
+ ('The River''s Quiet Warning','ReadPilot','Nonfiction','Grade 4','680L',175,'Students investigate how rain, bare soil, and streamside plants affect a river after storms','["Nonfiction","Science","Advanced"]','["After three days of rain, the river rose past the painted mark beneath Cedar Bridge.","The water moved fast, carrying twigs but leaving the larger branches behind.","At first, the school team assumed the old footpath caused the muddy bank.","Their measurements suggested a different story: the bank was bare where grass had been removed.","Roots from native grasses hold soil in place, while pavement sends rain quickly toward the river.","The team mapped where puddles formed after each storm, noting which drains emptied near the bend.","They planted grasses above the bank and placed signs asking walkers to stay on the path.","A month later, another storm brought less mud to the river, although the water still rose.","The change did not prove the plants caused every difference; rainfall had also been lighter.","The students compared photos, rain totals, and water samples before drawing a careful conclusion.","They recommended keeping the grasses and gathering measurements through the next wet season.","Their report showed how patient observations can turn a worry into a testable plan."]'),
+ ('Short Vowel Sound Practice','ReadPilot','Phonics Practice','Grade 2','300L',45,'A short, decodable reading that repeats simple consonant-vowel-consonant words with short a, e, i, o, and u sounds.','["Phonics","Decoding","Short Vowels","Beginner"]','["Sam has a red bag.","A black cat naps on the bag.","Sam gets a pen and a big map.","The cat sits on the map.","Sam puts the map in a box.","Then the cat hops in the box.","Sam and the cat grin."]'),
+ ('Syllable Steps: The Picnic','ReadPilot','Phonics Practice','Grade 2–3','400L',47,'A guided decodable story with familiar two-syllable words to practice clapping, dividing, and blending word parts.','["Phonics","Decoding","Syllables","Multisyllabic Words"]','["Mia packs a picnic basket.","She puts a napkin and a lemon in it.","Her sister brings a paper plate.","They follow a sunset path to the garden.","A rabbit hops beside them.","Mia shares a muffin with her sister.","They clean up and walk home together."]'),
+ ('Read Smoothly: A Garden Walk','ReadPilot','Fluency Practice','Grade 2–3','420L',41,'Short, rhythmic sentences with repeated phrases to help developing readers build accurate, comfortable pacing.','["Fluency","Repeated Reading","Beginner"]','["We walk to the garden.","We walk past the gate.","We walk by the green rows.","Stop and look.","A bee hums by a flower.","A bird sings from a branch.","We walk slowly home.","We can read it once more."]'),
+ ('Meaning Makers: The Missing Mittens','ReadPilot','Comprehension Practice','Grade 3','480L',74,'A brief story with clear clues that supports retelling, finding the main idea, and making simple inferences.','["Comprehension","Main Idea","Inference","Intermediate"]','["Nora looked for her red mittens before recess.","The bench was empty, but a few drops of snow rested on it.","She saw a small trail of snow leading toward the coat hooks.","A classmate was hanging up a wet coat nearby.","Nora checked beside the hooks and found her mittens.","She thanked her classmate for bringing them inside.","Outside, Nora joined her friends in the snow.","Small clues helped Nora solve the problem."]')
 
 CREATE TABLE IF NOT EXISTS access_requests (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -237,6 +260,7 @@ CREATE TABLE IF NOT EXISTS access_requests (
   school VARCHAR(160) NOT NULL,
   reason TEXT NOT NULL,
   requested_role ENUM('teacher', 'admin') NOT NULL,
+  id_document_path VARCHAR(255) NULL,
   status ENUM('pending', 'approved', 'declined') NOT NULL DEFAULT 'pending',
   reviewed_by INT UNSIGNED NULL,
   reviewed_at DATETIME NULL,
@@ -247,6 +271,7 @@ CREATE TABLE IF NOT EXISTS access_requests (
 
 ALTER TABLE access_requests ADD COLUMN IF NOT EXISTS google_sub VARCHAR(255) NULL;
 ALTER TABLE access_requests ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255) NOT NULL DEFAULT '';
+ALTER TABLE access_requests ADD COLUMN IF NOT EXISTS id_document_path VARCHAR(255) NULL;
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -301,4 +326,3 @@ CREATE TABLE IF NOT EXISTS session_ai_evaluations (
   CONSTRAINT fk_eval_session FOREIGN KEY (session_id) REFERENCES reading_sessions(id) ON DELETE CASCADE,
   CONSTRAINT fk_eval_quiz FOREIGN KEY (quiz_attempt_id) REFERENCES quiz_attempts(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
-

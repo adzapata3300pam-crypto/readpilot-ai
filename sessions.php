@@ -185,24 +185,6 @@
   }
   .btn-new svg{width:15px;height:15px;}
   .btn-new:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--green-dark), 0 4px 12px rgba(111,191,90,0.35);}
-  .bell{
-    position:relative;width:42px;height:42px;border-radius:12px;background:var(--card);border:1px solid var(--border);
-    display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex-shrink:0;cursor:pointer;
-  }
-  .bell svg{width:17px;height:17px;color:var(--ink);}
-  .bell .badge{
-    position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;font-size:10px;font-weight:800;
-    width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);
-  }
-  .bell-panel{
-    position:absolute;top:52px;right:0;width:260px;background:var(--card);border-radius:14px;
-    box-shadow:0 10px 30px rgba(20,40,28,0.16);border:1px solid var(--border);padding:8px;display:none;z-index:40;
-  }
-  .bell-panel.open{display:block;}
-  .bell-item{padding:10px 10px;border-radius:10px;font-size:12.5px;font-weight:600;color:var(--ink);}
-  .bell-item:hover{background:var(--bg);}
-  .bell-item .sub{color:var(--muted);font-weight:600;font-size:11px;margin-top:2px;}
-
   /* ---------- Controls row ---------- */
   .controls{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
   .tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;box-shadow:var(--shadow);}
@@ -467,19 +449,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
           <input type="text" id="searchInput" placeholder="Search by student or book...">
         </div>
-        <button class="btn-new" id="newSessionBtn">
+        <button class="btn-new" id="newSessionBtn" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           New Session
         </button>
-        <div class="bell" id="bellBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge" id="bellBadge">3</span>
-          <div class="bell-panel" id="bellPanel">
-            <div class="bell-item">Carmen Reyes finished a session <div class="sub">Just now</div></div>
-            <div class="bell-item">Weekly reports are ready <div class="sub">Tap Reports to view</div></div>
-            <div class="bell-item">2 students haven't read this week <div class="sub">Check in with Liam and Ana</div></div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -600,57 +573,13 @@
     // ============================================================
     // Roster (shared naming/colors with the Students page)
     // ============================================================
-    const roster = [
-      {id:1, name:'Carmen Reyes', color:'#6fbf5a', book:'A Rainy Day Surprise', section:'Section A'},
-      {id:2, name:'Eva Mendoza', color:'#c9924d', book:'The Three Little Pigs', section:'Section A'},
-      {id:3, name:'Isabella Ramos', color:'#f2a13a', book:'Journey to the Stars', section:'Section A'},
-      {id:4, name:'Diego Santos', color:'#8b6bd1', book:'The Ugly Duckling', section:'Section A'},
-      {id:5, name:'Maya Cruz', color:'#4fa3b8', book:"Charlotte's Web (excerpt)", section:'Section B'},
-      {id:6, name:'Liam Torres', color:'#ea5d5d', book:'The Tortoise and the Hare', section:'Section B'},
-      {id:7, name:'Sofia Delgado', color:'#6fbf5a', book:'Goldilocks and the Three Bears', section:'Section B'},
-      {id:8, name:'Mateo Villanueva', color:'#f2a13a', book:'The Little Red Hen', section:'Section B'},
-      {id:9, name:'Ana Bautista', color:'#8b6bd1', book:'The Boy Who Cried Wolf', section:'Section C'},
-      {id:10, name:'Noah Garcia', color:'#4fa3b8', book:'Jack and the Beanstalk', section:'Section C'},
-      {id:11, name:'Camila Flores', color:'#ea5d5d', book:'The Fox and the Grapes', section:'Section C'},
-      {id:12, name:'Ethan Morales', color:'#c9924d', book:'The Little Mermaid (retold)', section:'Section C'},
-    ];
+    let roster = [];
     function sectionOf(student){ return (student && student.section) ? student.section : 'Unassigned'; }
     function studentById(id){ return roster.find(r=>r.id===id); }
     function initials(name){ return name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase(); }
 
-    // ============================================================
-    // Mock session history (timestamps relative to right now,
-    // so "Today" / "This Week" filters behave correctly)
-    // ============================================================
     const HOUR = 60*60*1000;
-    function hoursAgo(h){ return Date.now() - h*HOUR; }
-
-    let sessions = [
-      {studentId:1, book:'The Lion and the Mouse', wpm:379, accuracy:100, ts:hoursAgo(1)},
-      {studentId:1, book:'The Lion and the Mouse', wpm:312, accuracy:98,  ts:hoursAgo(3)},
-      {studentId:2, book:'The Three Little Pigs', wpm:298, accuracy:95,  ts:hoursAgo(5)},
-      {studentId:3, book:'Journey to the Stars', wpm:284, accuracy:90,  ts:hoursAgo(8)},
-      {studentId:1, book:'A Rainy Day Surprise', wpm:265, accuracy:88,  ts:hoursAgo(22)},
-      {studentId:10,book:'Jack and the Beanstalk', wpm:302, accuracy:96, ts:hoursAgo(26)},
-      {studentId:5, book:"Charlotte's Web (excerpt)", wpm:268, accuracy:92, ts:hoursAgo(30)},
-      {studentId:4, book:'The Ugly Duckling', wpm:245, accuracy:88, ts:hoursAgo(48)},
-      {studentId:7, book:'Goldilocks and the Three Bears', wpm:255, accuracy:91, ts:hoursAgo(52)},
-      {studentId:11,book:'The Fox and the Grapes', wpm:230, accuracy:87, ts:hoursAgo(60)},
-      {studentId:6, book:'The Tortoise and the Hare', wpm:190, accuracy:79, ts:hoursAgo(70)},
-      {studentId:8, book:'The Little Red Hen', wpm:210, accuracy:83, ts:hoursAgo(96)},
-      {studentId:12,book:'The Little Mermaid (retold)', wpm:260, accuracy:93, ts:hoursAgo(100)},
-      {studentId:2, book:'The Three Little Pigs', wpm:270, accuracy:90, ts:hoursAgo(120)},
-      {studentId:9, book:'The Boy Who Cried Wolf', wpm:172, accuracy:75, ts:hoursAgo(150)},
-      {studentId:3, book:'Journey to the Stars', wpm:255, accuracy:86, ts:hoursAgo(170)},
-      {studentId:1, book:'The Lion and the Mouse', wpm:290, accuracy:94, ts:hoursAgo(200)},
-      {studentId:10,book:'Jack and the Beanstalk', wpm:288, accuracy:93, ts:hoursAgo(260)},
-      {studentId:6, book:'The Tortoise and the Hare', wpm:165, accuracy:74, ts:hoursAgo(310)},
-      {studentId:5, book:"Charlotte's Web (excerpt)", wpm:250, accuracy:89, ts:hoursAgo(340)},
-      {studentId:4, book:'The Ugly Duckling', wpm:220, accuracy:85, ts:hoursAgo(360)},
-      {studentId:7, book:'Goldilocks and the Three Bears', wpm:240, accuracy:88, ts:hoursAgo(380)},
-    ].map((s,i)=>({id:i+1, ...s}));
-
-    let nextId = sessions.length + 1;
+    let sessions = [];
     let searchTerm = '';
     let activeRange = 'all';
     let sectionFilterVal = 'all';
@@ -693,15 +622,33 @@
       const sel = document.getElementById('sectionFilter');
       const sections = [...new Set(roster.map(sectionOf))].sort();
       const current = sel.value || 'all';
-      sel.innerHTML = `<option value="all">All Sections</option>` +
-        sections.map(sec=>`<option value="${sec}">${sec}</option>`).join('');
+      sel.innerHTML = '';
+      const allOption = document.createElement('option');
+      allOption.value = 'all';
+      allOption.textContent = 'All Sections';
+      sel.appendChild(allOption);
+      sections.forEach(section=>{
+        const option = document.createElement('option');
+        option.value = section;
+        option.textContent = section;
+        sel.appendChild(option);
+      });
       sel.value = sections.includes(current) ? current : 'all';
     }
 
     function populateStudentSelects(){
       const formSel = document.getElementById('newStudent');
-      const allOpts = roster.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
-      formSel.innerHTML = allOpts;
+      formSel.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = roster.length ? 'Choose a student' : 'No students available';
+      formSel.appendChild(placeholder);
+      roster.filter(student=>sectionFilterVal === 'all' || sectionOf(student) === sectionFilterVal).forEach(student=>{
+        const option = document.createElement('option');
+        option.value = student.id;
+        option.textContent = student.name;
+        formSel.appendChild(option);
+      });
     }
 
     // ============================================================
@@ -921,7 +868,15 @@
 
       fetch('student-api.php', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams({action:'record_session', student_id:studentId, book:book, wpm:wpm, accuracy:accuracy})})
         .then(response=>response.json().then(data=>({ok:response.ok,data:data})))
-        .then(result=>{ if(!result.ok) throw new Error(result.data.error || 'Unable to save session'); sessions.unshift({id:nextId++, studentId, book, wpm, accuracy, ts:Date.now()}); visibleCount = Math.max(visibleCount, PAGE_SIZE); closeNewModal(); renderAll(); const student = studentById(studentId); showToast(`Session logged for ${student.name}: ${wpm} WPM, ${accuracy}%`); })
+        .then(result=>{
+          if(!result.ok) throw new Error(result.data.error || 'Unable to save session');
+          sessions.unshift({id:Number(result.data.session_id), studentId, book, wpm, accuracy, ts:Date.now()});
+          visibleCount = Math.max(visibleCount, PAGE_SIZE);
+          closeNewModal();
+          renderAll();
+          const student = studentById(studentId);
+          showToast(`Session logged for ${student.name}: ${wpm} WPM, ${accuracy}%`);
+        })
         .catch(error=>showToast(error.message));
     });
 
@@ -971,14 +926,6 @@
         localStorage.setItem('readpilot-sidebar', 'collapsed');
       }
     });
-    const bellBtn = document.getElementById('bellBtn');
-    const bellPanel = document.getElementById('bellPanel');
-    bellBtn.addEventListener('click', e=>{
-      e.stopPropagation();
-      bellPanel.classList.toggle('open');
-      document.getElementById('bellBadge').style.display = 'none';
-    });
-    document.addEventListener('click', ()=>bellPanel.classList.remove('open'));
     document.getElementById('tipClose').addEventListener('click', function(){
       this.closest('.tip').style.display = 'none';
     });
@@ -992,15 +939,26 @@
     populateSectionSelect();
     populateStudentSelects();
     renderAll();
-    fetch('student-api.php?view=sessions').then(response=>response.json()).then(result=>{
-      if (Array.isArray(result.students)) {
-        roster.length = 0;
-        result.students.forEach(student=>roster.push(student));
-        populateSectionSelect();
-        populateStudentSelects();
-      }
-      if (Array.isArray(result.sessions)) { sessions = result.sessions; nextId = sessions.reduce((max, item)=>Math.max(max, item.id), 0) + 1; renderAll(); }
-    }).catch(()=>{});
+    fetch('student-api.php?view=sessions').then(response=>response.json().then(result=>{
+      if(!response.ok) throw new Error(result.error || 'Unable to load sessions');
+      return result;
+    })).then(result=>{
+      if(!Array.isArray(result.students) || !Array.isArray(result.sessions)) throw new Error('Session data is incomplete');
+      roster = result.students;
+      sessions = result.sessions;
+      document.getElementById('newSessionBtn').disabled = roster.length === 0;
+      populateSectionSelect();
+      populateStudentSelects();
+      renderAll();
+    }).catch(error=>{
+      roster = [];
+      sessions = [];
+      document.getElementById('newSessionBtn').disabled = true;
+      populateSectionSelect();
+      populateStudentSelects();
+      renderAll();
+      showToast(error.message);
+    });
   </script>
   <script src="shared-ui.js"></script>
 </body>

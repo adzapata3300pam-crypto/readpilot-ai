@@ -79,6 +79,32 @@
 </head>
 <body>
 <aside class="sidebar">
+  <div class="pixel-plane" style="--y:14%; --dur:13s; --delay:0s;" aria-hidden="true">
+    <svg viewBox="0 0 13 9" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="2" height="1" fill="#cbe98f"/>
+      <rect x="0" y="1" width="4" height="1" fill="#cbe98f"/>
+      <rect x="0" y="2" width="6" height="1" fill="#cbe98f"/>
+      <rect x="0" y="3" width="9" height="1" fill="#cbe98f"/>
+      <rect x="0" y="4" width="13" height="1" fill="#b1db65"/>
+      <rect x="0" y="5" width="9" height="1" fill="#7fae55"/>
+      <rect x="0" y="6" width="6" height="1" fill="#7fae55"/>
+      <rect x="0" y="7" width="4" height="1" fill="#7fae55"/>
+      <rect x="0" y="8" width="2" height="1" fill="#7fae55"/>
+    </svg>
+  </div>
+  <div class="pixel-plane" style="--y:74%; --dur:17s; --delay:6s;" aria-hidden="true">
+    <svg viewBox="0 0 13 9" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="2" height="1" fill="#cbe98f"/>
+      <rect x="0" y="1" width="4" height="1" fill="#cbe98f"/>
+      <rect x="0" y="2" width="6" height="1" fill="#cbe98f"/>
+      <rect x="0" y="3" width="9" height="1" fill="#cbe98f"/>
+      <rect x="0" y="4" width="13" height="1" fill="#b1db65"/>
+      <rect x="0" y="5" width="9" height="1" fill="#7fae55"/>
+      <rect x="0" y="6" width="6" height="1" fill="#7fae55"/>
+      <rect x="0" y="7" width="4" height="1" fill="#7fae55"/>
+      <rect x="0" y="8" width="2" height="1" fill="#7fae55"/>
+    </svg>
+  </div>
   <div>
     <div class="logo-row">
       <div class="logo-left"><div class="logo-icon"><i class="bx bxs-paper-plane"></i></div><div class="logo-text"><span class="brand">ReadPilot</span><span class="tagline">Guide. Read. Grow.</span></div></div>
@@ -197,9 +223,14 @@ document.getElementById('confirmDelete').addEventListener('click', async () => {
 document.getElementById('selftest').addEventListener('click', async () => {
   const o = document.getElementById('testout'); const status = document.getElementById('cloudStatus');
   o.classList.add('show'); o.classList.remove('failed'); o.textContent='Writing a test file to the bucket…'; status.className='recordings-state'; status.textContent='Checking the Supabase S3 endpoint, credentials, and bucket…';
-  const d = await api('view=selftest', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams({csrf_token:csrfToken})});
-  o.innerHTML = d.ok ? `<span class="ok">Connected.</span> Wrote, read back and deleted <code>${esc(d.key)}</code> in bucket <code>${esc(d.bucket)}</code> (${d.size} bytes, ETag ${esc(d.etag)}).` : `<span class="bad">Failed:</span> ${esc(d.error)}`;
-  if (!d.ok) o.classList.add('failed'); status.className = 'recordings-state ' + (d.ok ? 'connected' : 'failed'); status.textContent = d.ok ? 'Supabase Storage is connected and verified.' : 'Supabase Storage needs configuration or permissions.';
+  try {
+    const d = await api('view=selftest', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams({csrf_token:csrfToken})});
+    o.innerHTML = d.ok ? `<span class="ok">Connected.</span> Wrote, read back and deleted <code>${esc(d.key)}</code> in bucket <code>${esc(d.bucket)}</code> (${d.size} bytes, ETag ${esc(d.etag)}).` : `<span class="bad">Failed:</span> ${esc(d.error || 'Supabase Storage check failed.')}`;
+    if (!d.ok) o.classList.add('failed'); status.className = 'recordings-state ' + (d.ok ? 'connected' : 'failed'); status.textContent = d.ok ? 'Supabase Storage is connected and verified.' : 'Supabase Storage needs configuration or permissions.';
+  } catch (error) {
+    o.classList.add('failed'); o.textContent = 'Failed: Could not reach the recording service. Check the connection and try again.';
+    status.className = 'recordings-state failed'; status.textContent = 'The recording service could not be reached.';
+  }
 });
 document.getElementById('sidebarToggle').addEventListener('click', function(){
   const html = document.documentElement;
@@ -209,5 +240,6 @@ document.getElementById('sidebarToggle').addEventListener('click', function(){
 });
 load();
 </script>
+<script src="shared-ui.js"></script>
 </body>
 </html>

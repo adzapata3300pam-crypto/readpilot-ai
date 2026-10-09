@@ -48,7 +48,7 @@
   /* ---------- Book grid ---------- */
   .book-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:18px;}
   .book-card{
-    height:220px;
+    min-height:220px;height:auto;
     background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;
     cursor:pointer;display:flex;flex-direction:column;
     transition:transform .12s steps(2), box-shadow .12s ease;
@@ -60,12 +60,16 @@
     font-size:10px;font-weight:800;color:#fff;background:rgba(0,0,0,0.18);
     padding:3px 8px;border-radius:20px;white-space:nowrap;
   }
-  .book-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;}
-  .book-title{font-family:'Poppins',sans-serif;font-size:14.5px;font-weight:700;color:#16281d;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .book-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1 0 auto;min-height:0;}
+  .book-title{font-family:'Poppins',sans-serif;font-size:14.5px;font-weight:700;color:#16281d;line-height:1.3;min-height:2.6em;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;}
   .book-author{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .book-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px;}
+  .book-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;}
   .book-genre{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:20px;}
   .book-lexile{font-size:10.5px;font-weight:700;color:var(--muted);}
+  .difficulty-pill{display:inline-flex;align-items:center;font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+  .difficulty-pill.beginner{background:var(--green-light);color:var(--green-dark);}
+  .difficulty-pill.intermediate{background:var(--orange-light);color:var(--orange);}
+  .difficulty-pill.advanced{background:var(--red-light);color:var(--red);}
   .book-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--border);padding-top:10px;margin-top:auto;}
   .book-words{font-size:11px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:4px;}
   .book-words .bx{font-size:13px;}
@@ -90,6 +94,37 @@
   .book-assign-btn.assigned{background:var(--green);color:#fff;}
   .resource-delete-btn{color:var(--red);}
   .resource-delete-btn:hover{background:var(--red-light);color:var(--red);}
+  .resource-delete-dialog{
+    width:min(420px,calc(100% - 32px));padding:22px;border:1px solid var(--border);
+    border-radius:16px;background:var(--card);color:var(--ink);box-shadow:var(--shadow);
+  }
+  .resource-delete-dialog::backdrop{background:rgba(0,0,0,.55);}
+  .resource-delete-dialog h2{margin:0 0 8px;font-family:'Poppins',sans-serif;font-size:17px;}
+  .resource-delete-dialog p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;}
+  .resource-delete-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+  .resource-delete-actions button{padding:9px 13px;}
+  .resource-delete-confirm{background:var(--red);color:#fff;border:0;border-radius:12px;font:700 13px 'Nunito',sans-serif;cursor:pointer;}
+  .resource-delete-confirm:hover{filter:brightness(.95);}
+  .resource-delete-confirm:disabled{opacity:.6;cursor:wait;}
+
+  /* ---------- "No quiz created yet" pop-up ---------- */
+  .no-quiz-dialog{
+    width:min(420px,calc(100% - 32px));padding:28px 24px 22px;border:1px solid var(--border);
+    border-radius:20px;background:var(--card);color:var(--ink);box-shadow:var(--shadow);text-align:center;
+  }
+  .no-quiz-dialog::backdrop{background:rgba(0,0,0,.55);}
+  .no-quiz-dialog[open]{animation:resModalIn .28s cubic-bezier(.2,.9,.3,1.1) both;}
+  .no-quiz-dialog-icon{
+    width:58px;height:58px;border-radius:50%;margin:0 auto 14px;
+    background:var(--orange-light);color:var(--orange);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .no-quiz-dialog-icon .bx{font-size:28px;}
+  .no-quiz-dialog h2{margin:0 0 8px;font-family:'Poppins',sans-serif;font-size:18px;}
+  .no-quiz-dialog p{margin:0;color:var(--muted);font-size:13.5px;font-weight:600;line-height:1.6;}
+  .no-quiz-dialog-actions{display:flex;justify-content:center;gap:10px;margin-top:20px;}
+  .no-quiz-dialog-actions button{padding:10px 18px;font-size:13px;}
+  .no-quiz-dialog-actions .btn-primary{flex:none;}
 
   .empty-grid{grid-column:1/-1;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:50px 20px;text-align:center;color:var(--muted);}
   .empty-grid .bx{font-size:34px;color:var(--green);margin-bottom:10px;display:block;}
@@ -314,6 +349,9 @@
     display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);
     border-radius:12px;padding:10px 14px;margin-bottom:14px;
   }
+  .sp-section-filter{margin-bottom:10px;}
+  .sp-section-filter label{display:block;margin-bottom:5px;font-size:11px;font-weight:800;color:var(--muted);}
+  .sp-section-filter select{width:100%;}
   .sp-search svg{width:15px;height:15px;color:var(--muted);flex-shrink:0;}
   .sp-search input{border:none;outline:none;background:transparent;font-family:inherit;font-size:13.5px;color:var(--ink);width:100%;}
   .sp-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;margin-bottom:6px;}
@@ -323,6 +361,7 @@
   }
   .sp-row:hover{border-color:var(--green);}
   .sp-row.selected{border-color:var(--green);background:var(--green-light);}
+  .sp-row.too-challenging{border-color:var(--orange);background:var(--orange-light);}
   .sp-avatar{
     width:36px;height:36px;border-radius:50%;color:#fff;font-size:12.5px;font-weight:800;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Poppins',sans-serif;
@@ -330,6 +369,8 @@
   .sp-info{flex-grow:1;min-width:0;}
   .sp-name{font-size:13.5px;font-weight:700;color:#16281d;}
   .sp-grade{font-size:11.5px;color:var(--muted);font-weight:600;}
+  .sp-level-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:3px;}
+  .sp-level-row small{font-size:10.5px;color:var(--muted);font-weight:700;}
   html[data-theme="dark"] .sp-name{color:var(--ink);}
   .sp-check{
     width:22px;height:22px;border-radius:7px;border:2px solid var(--border);flex-shrink:0;
@@ -520,10 +561,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           Add Resource
         </button>
-        <div class="bell">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge">3</span>
-        </div>
       </div>
     </div>
 
@@ -541,6 +578,12 @@
             <input type="text" id="librarySearch" placeholder="Search title, author, or tag...">
           </div>
           <select class="sort-select" id="genreFilter"></select>
+          <select class="sort-select" id="difficultyFilter" aria-label="Filter by difficulty">
+            <option value="all">All Levels</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
         </div>
       </div>
 
@@ -729,6 +772,26 @@
     </div>
   </div>
 
+  <dialog class="resource-delete-dialog" id="resourceDeleteDialog" aria-labelledby="resourceDeleteTitle" aria-describedby="resourceDeleteMessage">
+    <h2 id="resourceDeleteTitle">Remove reading material?</h2>
+    <p id="resourceDeleteMessage"></p>
+    <div class="resource-delete-actions">
+      <button class="btn-secondary" id="cancelResourceDelete" type="button">Keep material</button>
+      <button class="resource-delete-confirm" id="confirmResourceDelete" type="button"><i class='bx bx-trash'></i> Remove material</button>
+    </div>
+  </dialog>
+
+  <!-- ============ NO QUIZ YET POP-UP ============ -->
+  <dialog class="no-quiz-dialog" id="noQuizDialog" aria-labelledby="noQuizTitle" aria-describedby="noQuizMessage">
+    <div class="no-quiz-dialog-icon"><i class='bx bx-help-circle'></i></div>
+    <h2 id="noQuizTitle">No quiz created yet</h2>
+    <p id="noQuizMessage"></p>
+    <div class="no-quiz-dialog-actions">
+      <button class="btn-secondary" id="noQuizCancelBtn" type="button">Not now</button>
+      <button class="btn-primary" id="noQuizCreateBtn" type="button"><i class='bx bx-plus'></i> Create Quiz</button>
+    </div>
+  </dialog>
+
   <!-- ============ STUDENT PICKER MODAL ============ -->
   <div class="overlay" id="spOverlay">
     <div class="modal student-picker-modal">
@@ -744,6 +807,12 @@
       <div class="sp-book-context" id="spBookContext">
         <i class='bx bx-book-open'></i>
         <span class="t" id="spBookTitle">--</span>
+      </div>
+      <div class="sp-section-filter">
+        <label for="spSectionFilter">View students by section</label>
+        <select class="sort-select" id="spSectionFilter">
+          <option value="all">All Sections</option>
+        </select>
       </div>
       <div class="sp-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
@@ -814,6 +883,24 @@
       "Fantasy": "#c9924d", "default": "#6fbf5a"
     };
 
+    const DIFFICULTY_ORDER = {Beginner:0, Intermediate:1, Advanced:2};
+    function resourceDifficulty(book){
+      const lexile = Number.parseInt(String(book.lexile || '').match(/\d+/)?.[0] || '', 10);
+      if(!Number.isFinite(lexile)) return 'Beginner';
+      if(lexile <= 450) return 'Beginner';
+      if(lexile <= 550) return 'Intermediate';
+      return 'Advanced';
+    }
+    function studentDifficulty(student){
+      const sessions = Number(student.sessions) || 0;
+      const wpm = Number(student.wpm) || 0;
+      const accuracy = Number(student.accuracy) || 0;
+      if(sessions < 3 || accuracy < 85 || wpm < 60) return 'Beginner';
+      if(sessions >= 6 && accuracy >= 95 && wpm >= 120) return 'Advanced';
+      return 'Intermediate';
+    }
+    function difficultyClass(level){ return level.toLowerCase(); }
+
     let LIBRARY = [
       { id: 1, title: "The Lion and the Mouse", author: "Aesop (retold)", genre: "Fable", level: "Grade 3", lexile: "430L", words: 620, desc: "A classic fable about kindness and an unexpected friendship between a mighty lion and a small mouse.", tags: ["Fiction","Read Aloud"], assigned: 14 },
       { id: 2, title: "Journey to the Stars", author: "Priya Anand", genre: "Sci-Fi", level: "Grade 3", lexile: "510L", words: 980, desc: "A young astronaut-in-training imagines a voyage past the moon and back before bedtime.", tags: ["Fiction","Space","Adventure"], assigned: 9 },
@@ -830,6 +917,7 @@
         LIBRARY = result.resources;
         buildGenreFilter();
         renderLibrary();
+        openRequestedResource();
       }
     }).catch(() => {});
 
@@ -863,16 +951,29 @@
     // ---- Library rendering ----
     let librarySearch = '';
     let genreFilterValue = 'all';
+    let difficultyFilterValue = 'all'; // 'all' | 'Beginner' | 'Intermediate' | 'Advanced'
+
+    function lexileNumber(book){
+      return Number.parseInt(String(book.lexile || '').match(/\d+/)?.[0] || '0', 10);
+    }
 
     function filteredLibrary(){
-      return LIBRARY.filter(b => {
+      const list = LIBRARY.filter(b => {
         if (genreFilterValue !== 'all' && b.genre !== genreFilterValue) return false;
+        if (difficultyFilterValue !== 'all' && resourceDifficulty(b) !== difficultyFilterValue) return false;
         if (librarySearch){
           const hay = (b.title + ' ' + b.author + ' ' + b.tags.join(' ')).toLowerCase();
           if (!hay.includes(librarySearch)) return false;
         }
         return true;
       });
+
+      // Always list Beginner → Advanced, then by Lexile, then by title.
+      return list.slice().sort((a, b) =>
+        (DIFFICULTY_ORDER[resourceDifficulty(a)] - DIFFICULTY_ORDER[resourceDifficulty(b)]) ||
+        (lexileNumber(a) - lexileNumber(b)) ||
+        String(a.title).localeCompare(String(b.title))
+      );
     }
 
     const bookGridEl = document.getElementById('bookGrid');
@@ -902,12 +1003,13 @@
             <div class="book-author">${escapeHtml(b.author)}</div>
             <div class="book-meta">
               <span class="book-genre" style="background:${color}22;color:${color}">${escapeHtml(b.genre)}</span>
+              <span class="difficulty-pill ${difficultyClass(resourceDifficulty(b))}">${resourceDifficulty(b)}</span>
               <span class="book-lexile">${escapeHtml(b.lexile)}</span>
             </div>
             <div class="book-foot">
               <span class="book-words"><i class='bx bx-file-blank'></i>${Number(b.words) || 0} words</span>
               <div class="book-foot-actions">
-                <button class="book-quiz-btn ${CUSTOM_QUIZZES[b.id] ? 'has-custom' : ''}" data-id="${b.id}" title="${CUSTOM_QUIZZES[b.id] ? 'Take Quiz (custom quiz available)' : 'Take Quiz'}"><i class='bx bx-help-circle'></i></button>
+                <button class="book-quiz-btn ${CUSTOM_QUIZZES[b.id] ? 'has-custom' : ''}" data-id="${b.id}" title="${CUSTOM_QUIZZES[b.id] ? 'Take Quiz' : 'No quiz created yet'}"><i class='bx bx-help-circle'></i></button>
                 <button class="book-assign-btn ${b.justAssigned ? 'assigned' : ''}" data-id="${b.id}">
                   ${b.justAssigned ? '<i class="bx bx-check"></i> Assigned' : 'Assign'}
                 </button>
@@ -937,6 +1039,10 @@
     });
     genreFilterEl.addEventListener('change', (e) => {
       genreFilterValue = e.target.value;
+      renderLibrary();
+    });
+    document.getElementById('difficultyFilter').addEventListener('change', (e) => {
+      difficultyFilterValue = e.target.value;
       renderLibrary();
     });
 
@@ -1181,6 +1287,7 @@
         const sentences = text.match(/[^.!?]+[.!?]+(?:["'’”)]*)|[^.!?]+$/g);
         return (sentences || [text]).map(sentence => sentence.trim()).filter(Boolean);
       }
+      if (Array.isArray(b.story) && b.story.length) return b.story.map(line => String(line).trim()).filter(Boolean);
       if (STORY_TEXT[b.id]) return STORY_TEXT[b.id];
       const bySentence = (b.desc || '').match(/[^.!?]+[.!?]+/g);
       return (bySentence && bySentence.length ? bySentence.map(s => s.trim()) : [b.desc || b.title]);
@@ -1592,19 +1699,55 @@
       renderAllQuizzes();
     });
 
-    // Bundles a book's data (and a teacher-authored quiz, if one exists)
-    // into the shape quiz.php expects and jumps straight to the quiz for
-    // that story. Works for any book in the library (built-in stories,
-    // uploads, or web-fetched articles) — quiz.php's auto-generator
-    // builds questions straight from `lines` when no custom quiz is set,
-    // and uses `customQuestions` instead when one is provided.
+    // Bundles a book's data and its teacher-authored quiz into the shape
+    // quiz.php expects and jumps straight to the quiz for that story.
+    // If no quiz has been created for the book, the teacher is told so
+    // instead of navigating (no auto-generated fallback exists).
+    // There are NO auto-generated quizzes. A quiz exists only if a teacher
+    // created one (attached to this resource, or a standalone quiz passed in
+    // as b.customQuiz).
+    function quizFor(b){
+      return b.customQuiz || CUSTOM_QUIZZES[b.id] || null;
+    }
+    function hasQuizFor(b){
+      const quiz = quizFor(b);
+      return Boolean(quiz && Array.isArray(quiz.questions) && quiz.questions.length);
+    }
+    // Pop-up shown when "Take Quiz" is clicked on a resource that has no quiz.
+    // Offers to create one; "Create Quiz" opens the Create Quiz tab with this
+    // resource already selected.
+    let noQuizBook = null;
+    function notifyNoQuiz(b){
+      noQuizBook = b;
+      document.getElementById('noQuizMessage').textContent =
+        `There is no quiz created for "${b.title}" yet. Would you like to create one now?`;
+      document.getElementById('noQuizDialog').showModal();
+    }
+    document.getElementById('noQuizCancelBtn').addEventListener('click', () => {
+      document.getElementById('noQuizDialog').close();
+      noQuizBook = null;
+    });
+    document.getElementById('noQuizCreateBtn').addEventListener('click', () => {
+      const book = noQuizBook;
+      noQuizBook = null;
+      document.getElementById('noQuizDialog').close();
+      resOverlay.classList.remove('open');
+      document.querySelector('#resTabs .tab[data-tab="createquiz"]').click();
+      if (book && LIBRARY.some(item => String(item.id) === String(book.id))){
+        document.getElementById('cqBookSelect').value = String(book.id);
+      }
+      document.getElementById('cqTitle').focus();
+    });
+
     function startQuizFor(b, student){
-      const custom = b.customQuiz || CUSTOM_QUIZZES[b.id];
+      if (!hasQuizFor(b)){ notifyNoQuiz(b); return; }
+      const custom = quizFor(b);
       const quizStory = {
         id: b.id,
         title: custom ? custom.title : b.title,
         author: b.author,
         level: b.level,
+        difficulty: resourceDifficulty(b),
         genre: b.genre,
         lines: b.title ? linesFor(b) : [],
         customQuestions: custom ? custom.questions : null,
@@ -1657,10 +1800,10 @@
       document.getElementById('resModalWords').textContent = b.words;
       document.getElementById('resModalAssigned').textContent = b.assigned + '×';
       document.getElementById('resModalDesc').textContent = b.desc;
-      document.getElementById('resModalTags').innerHTML = b.tags.map(t => `<span class="res-tag">${escapeHtml(t)}</span>`).join('');
+      document.getElementById('resModalTags').innerHTML = `<span class="difficulty-pill ${difficultyClass(resourceDifficulty(b))}">${resourceDifficulty(b)} reading</span>` + b.tags.map(t => `<span class="res-tag">${escapeHtml(t)}</span>`).join('');
       const deleteBtn = document.getElementById('resModalDeleteBtn');
       deleteBtn.hidden = !b.canDelete;
-      deleteBtn.onclick = () => removeResource(b);
+      deleteBtn.onclick = () => confirmRemoveResource(b);
       const assignBtn = document.getElementById('resModalAssignBtn');
       assignBtn.onclick = () => {
         resOverlay.classList.remove('open');
@@ -1685,12 +1828,32 @@
     document.getElementById('resModalClose').addEventListener('click', () => resOverlay.classList.remove('open'));
     resOverlay.addEventListener('click', (e) => { if (e.target === resOverlay) resOverlay.classList.remove('open'); });
 
+    function openRequestedResource(){
+      const resourceId = new URLSearchParams(window.location.search).get('resource_id');
+      if (!resourceId) return;
+      const resource = LIBRARY.find(item => String(item.id) === resourceId);
+      if (!resource) return;
+      document.querySelector('#resTabs .tab[data-tab="library"]').click();
+      openResourceModal(resource);
+    }
+
+    const resourceDeleteDialog = document.getElementById('resourceDeleteDialog');
+    const resourceDeleteMessage = document.getElementById('resourceDeleteMessage');
+    const confirmResourceDelete = document.getElementById('confirmResourceDelete');
+    document.getElementById('cancelResourceDelete').addEventListener('click', () => resourceDeleteDialog.close());
+
+    function confirmRemoveResource(book){
+      if (!book.canDelete) return;
+      resourceDeleteMessage.textContent = `Permanently remove "${book.title}" for all teachers? This also removes its student assignments, uploaded text, and attached quizzes.`;
+      confirmResourceDelete.onclick = () => removeResource(book);
+      resourceDeleteDialog.showModal();
+    }
+
     async function removeResource(book){
       if (!book.canDelete) return;
-      if (!window.confirm(`Permanently remove "${book.title}" for all teachers? This also removes its student assignments, uploaded text, and attached quizzes.`)) return;
-
       const deleteBtn = document.getElementById('resModalDeleteBtn');
       deleteBtn.disabled = true;
+      confirmResourceDelete.disabled = true;
       try {
         const response = await fetch('student-api.php', {
           method: 'POST',
@@ -1707,6 +1870,7 @@
           cqDraftQuestions = [];
         }
         saveQuizzes();
+        resourceDeleteDialog.close();
         resOverlay.classList.remove('open');
         buildGenreFilter();
         buildCqBookSelect();
@@ -1717,6 +1881,7 @@
         showToast(error.message || 'Unable to remove resource');
       } finally {
         deleteBtn.disabled = false;
+        confirmResourceDelete.disabled = false;
       }
     }
 
@@ -1734,31 +1899,34 @@
        Swap STUDENTS for a shared roster / API response when wiring up a
        backend so this list always matches the Students page.
     ===================================================================== */
-    let STUDENTS = [
-      { id: 1,  name: 'Carmen Reyes',      grade: 'Grade 3', color: '#6fbf5a' },
-      { id: 2,  name: 'Eva Mendoza',       grade: 'Grade 3', color: '#c9924d' },
-      { id: 3,  name: 'Isabella Ramos',    grade: 'Grade 3', color: '#f2a13a' },
-      { id: 4,  name: 'Diego Santos',      grade: 'Grade 3', color: '#8b6bd1' },
-      { id: 5,  name: 'Maya Cruz',         grade: 'Grade 3', color: '#4fa3b8' },
-      { id: 6,  name: 'Liam Torres',       grade: 'Grade 3', color: '#ea5d5d' },
-      { id: 7,  name: 'Sofia Delgado',     grade: 'Grade 3', color: '#6fbf5a' },
-      { id: 8,  name: 'Mateo Villanueva',  grade: 'Grade 3', color: '#f2a13a' },
-      { id: 9,  name: 'Ana Bautista',      grade: 'Grade 3', color: '#8b6bd1' },
-      { id: 10, name: 'Noah Garcia',       grade: 'Grade 3', color: '#4fa3b8' },
-      { id: 11, name: 'Camila Flores',     grade: 'Grade 3', color: '#ea5d5d' },
-      { id: 12, name: 'Ethan Morales',     grade: 'Grade 3', color: '#c9924d' }
-    ];
+    let STUDENTS = [];
+    let studentRosterLoading = true;
 
-    fetch('student-api.php').then(response => response.json()).then(result => {
+    fetch('student-api.php').then(response => response.json().then(result => {
+      if(!response.ok) throw new Error(result.error || 'Unable to load students');
+      return result;
+    })).then(result => {
       if (Array.isArray(result.students)) {
         STUDENTS = result.students.map(student => ({
           id: Number(student.id),
           name: student.name,
           grade: student.section,
-          color: student.color
+          color: student.color,
+          wpm: Number(student.wpm) || 0,
+          accuracy: Number(student.accuracy) || 0,
+          sessions: Number(student.sessions) || 0
         }));
       }
-    }).catch(() => {});
+      studentRosterLoading = false;
+      if(spPendingBook){
+        populateStudentSectionFilter();
+        renderStudentPicker();
+      }
+    }).catch(error => {
+      studentRosterLoading = false;
+      if(spPendingBook) renderStudentPicker();
+      showToast(error.message || 'Unable to load students');
+    });
 
     function spInitials(name){
       return name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
@@ -1772,26 +1940,55 @@
     let spMode = 'multi';
     let spPendingBook = null;
     let spSearchTerm = '';
+    let spSectionFilter = 'all';
+
+    function populateStudentSectionFilter(){
+      const select = document.getElementById('spSectionFilter');
+      const sections = [...new Set(STUDENTS.map(student => student.grade).filter(Boolean))]
+        .sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+      select.innerHTML = '<option value="all">All Sections</option>' +
+        sections.map(section => `<option value="${escapeHtml(section)}">${escapeHtml(section)}</option>`).join('');
+      if(spSectionFilter !== 'all' && !sections.includes(spSectionFilter)) spSectionFilter = 'all';
+      select.value = spSectionFilter;
+    }
 
     function renderStudentPicker(){
-      const list = STUDENTS.filter(s => !spSearchTerm || s.name.toLowerCase().includes(spSearchTerm));
-      if (!list.length){
-        spListEl.innerHTML = `<div class="sp-empty">No students match that search.</div>`;
+      const list = STUDENTS.filter(s =>
+        (spSectionFilter === 'all' || s.grade === spSectionFilter) &&
+        (!spSearchTerm || s.name.toLowerCase().includes(spSearchTerm))
+      );
+      if(studentRosterLoading){
+        spListEl.innerHTML = `<div class="sp-empty">Loading students...</div>`;
+      } else if (!list.length){
+        spListEl.innerHTML = `<div class="sp-empty">${STUDENTS.length ? 'No students match that search.' : 'No students are available for this account.'}</div>`;
       } else {
-        spListEl.innerHTML = list.map(s => `
-          <div class="sp-row ${spSelected.has(s.id) ? 'selected' : ''}" data-id="${s.id}">
+        spListEl.innerHTML = list.map(s => {
+          const recommendedLevel = studentDifficulty(s);
+          const selectedLevel = spPendingBook ? resourceDifficulty(spPendingBook) : 'Beginner';
+          const tooChallenging = DIFFICULTY_ORDER[selectedLevel] > DIFFICULTY_ORDER[recommendedLevel];
+          return `
+          <div class="sp-row ${spSelected.has(s.id) ? 'selected' : ''} ${tooChallenging ? 'too-challenging' : ''}" data-id="${s.id}">
             <div class="sp-avatar" style="background:${s.color}">${spInitials(s.name)}</div>
             <div class="sp-info">
               <div class="sp-name">${s.name}</div>
               <div class="sp-grade">${s.grade}</div>
+              <div class="sp-level-row"><span class="difficulty-pill ${difficultyClass(recommendedLevel)}">Suggested: ${recommendedLevel}</span><small>${s.sessions} sessions · ${s.wpm} WPM · ${s.accuracy}% accuracy</small></div>
+              ${tooChallenging ? `<div class="sp-grade">This ${selectedLevel} title is above the suggested level.</div>` : ''}
             </div>
             <div class="sp-check">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
             </div>
-          </div>
-        `).join('');
+          </div>`;
+        }).join('');
         spListEl.querySelectorAll('.sp-row').forEach(row => {
-          row.addEventListener('click', () => toggleStudent(Number(row.dataset.id)));
+          row.addEventListener('click', () => {
+            const student = STUDENTS.find(item => item.id === Number(row.dataset.id));
+            if(student && spPendingBook && DIFFICULTY_ORDER[resourceDifficulty(spPendingBook)] > DIFFICULTY_ORDER[studentDifficulty(student)]){
+              showToast(`${student.name} is currently recommended for ${studentDifficulty(student)} reading. Choose a ${studentDifficulty(student)} resource first.`);
+              return;
+            }
+            toggleStudent(Number(row.dataset.id));
+          });
         });
       }
       spCountEl.textContent = spSelected.size === 0
@@ -1810,17 +2007,23 @@
     }
 
     function openStudentPicker(book, mode){
+      if (mode === 'quiz' && !hasQuizFor(book)){
+        notifyNoQuiz(book);
+        return;
+      }
       spPendingBook = book;
       spMode = mode;
       spSelected = new Set();
       spSearchTerm = '';
+      spSectionFilter = 'all';
       document.getElementById('spSearch').value = '';
+      populateStudentSectionFilter();
       document.getElementById('spBookTitle').textContent = book.title;
       document.getElementById('spTitle').textContent =
         mode === 'single' ? 'Who is reading this?' :
         mode === 'quiz' ? 'Who is taking this quiz?' : 'Assign to Students';
       document.getElementById('spSubtitle').textContent =
-        mode === 'single' ? 'Choose one student to start this reading session' :
+        mode === 'single' ? `Choose one student · this book is ${resourceDifficulty(book)}` :
         mode === 'quiz' ? 'Choose one student to take the quiz' :
         'Select one or more students for this resource';
       renderStudentPicker();
@@ -1834,6 +2037,10 @@
 
     document.getElementById('spSearch').addEventListener('input', (e) => {
       spSearchTerm = e.target.value.trim().toLowerCase();
+      renderStudentPicker();
+    });
+    document.getElementById('spSectionFilter').addEventListener('change', (e) => {
+      spSectionFilter = e.target.value;
       renderStudentPicker();
     });
     document.getElementById('spCloseBtn').addEventListener('click', closeStudentPicker);
@@ -1863,6 +2070,7 @@
           title: book.title,
           author: book.author,
           level: book.level,
+          difficulty: resourceDifficulty(book),
           genre: book.genre,
           color: color,
           lines: linesFor(book),
@@ -2071,7 +2279,7 @@
         buildGenreFilter();
         renderFileList();
         renderLibrary();
-        showToast(`"${f.name}" added to your library`);
+        showToast(`"${result.title || title}" added to your library`);
         document.querySelector('#resTabs .tab[data-tab="library"]').click();
       } catch(error) {
         f.status = 'ready';

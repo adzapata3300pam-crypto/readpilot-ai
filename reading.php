@@ -110,7 +110,8 @@
 
   /* ---------- Stage ---------- */
   .stage{
-    flex-grow:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    flex-grow:1;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto 50px auto;
+    justify-items:center;align-items:center;
     padding:20px 24px;gap:26px;min-height:0;
   }
   .meta-label{
@@ -136,6 +137,7 @@
   .sentence-wrap{
     position:relative;
     max-width:900px;width:100%;
+    height:100%;min-height:0;align-content:center;overflow:hidden;
     display:flex;flex-wrap:wrap;justify-content:center;
     /* Row-gap reserves room for the pointer + trail line beneath the active
        word, so wrapped text on the next row never overlaps them — the
@@ -235,6 +237,7 @@
     gap:14px;
     width:100%;
     max-width:640px;
+    height:28px;
   }
   .current-word-label{
     font-family:'Poppins',sans-serif;
@@ -242,7 +245,7 @@
     font-size:22px;
     color:var(--accent);
     letter-spacing:.02em;
-    min-height:28px;
+    height:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .current-word-hint{
     font-size:11.5px;
@@ -262,13 +265,13 @@
   /* Fixed-height, aligned grid of dots. No matter how many lines the story has,
      it stays two rows tall and scrolls vertically instead of growing. */
   .dots-row{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, 9px);
+    display:flex;
+    flex-wrap:wrap;
     gap:8px;
     justify-content:center;
-    align-content:start;
+    align-content:flex-start;
     width:100%;max-width:640px;
-    max-height:50px;
+    height:50px;max-height:50px;
     padding:6px 10px;
     overflow-y:auto;overflow-x:hidden;
     scrollbar-width:thin;
@@ -324,10 +327,10 @@
     0%{transform:scale(.9);opacity:.8;}
     100%{transform:scale(1.5);opacity:0;}
   }
-  .mic-label{font-size:12.5px;font-weight:800;color:var(--ink);}
-  .mic-sub{font-size:11px;font-weight:700;color:var(--muted);}
-  .listen-status{font-size:11px;font-weight:800;color:var(--accent);min-height:14px;text-align:center;}
-  .rec-actions{display:flex;align-items:center;gap:10px;margin-top:2px;}
+  .mic-label{font-size:12.5px;font-weight:800;color:var(--ink);min-height:17px;}
+  .mic-sub{font-size:11px;font-weight:700;color:var(--muted);min-height:14px;}
+  .listen-status{font-size:11px;font-weight:800;color:var(--accent);height:28px;line-height:14px;overflow:hidden;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .rec-actions{display:flex;align-items:center;gap:10px;margin-top:2px;min-height:30px;}
   .autoplay-btn{background:var(--accent-strong);border-color:var(--accent-strong);color:var(--on-accent);}
   .autoplay-btn:hover{background:#7fce6b;}
   .autoplay-btn.playing{background:var(--red);border-color:var(--red);color:#fff;}
@@ -555,8 +558,11 @@
       /* sessionStorage unavailable (e.g. private browsing) — use demo story */
     }
 
-    document.getElementById('metaLabel').textContent =
-      (session.genre ? session.genre.toUpperCase() + ' \u00B7 ' : '') + (session.level ? session.level.toUpperCase() : 'GRADE 3');
+    document.getElementById('metaLabel').textContent = [
+      session.genre ? session.genre.toUpperCase() : '',
+      session.level ? session.level.toUpperCase() : 'GRADE 3',
+      session.difficulty ? session.difficulty.toUpperCase() + ' READING' : ''
+    ].filter(Boolean).join(' \u00B7 ');
     document.title = 'ReadPilot — ' + session.title;
 
     /* =====================================================================
@@ -694,8 +700,7 @@
     wordCounts.reduce((acc, count, i) => { lineStartWord[i] = acc; return acc + count; }, 0);
 
     // 'automatic' = the progress moves on its own so the student can follow along.
-    // 'manual' = the progress only moves once the student says the word correctly;
-    // if they get stuck on a word, it's flagged and logged to the struggle map.
+    // 'manual' = progress follows recognized speech; words not verified in time are flagged as difficult.
     let mode = 'automatic';
     let everUsedManual = false; // drives whether the end-of-story report shows an accuracy stat
     let sessionStruggles = []; // tricky words logged during THIS reading (reset on "Read Again")
@@ -705,7 +710,7 @@
     let listening = false;
     let stuckTimer = null;
     let finishing = false; // guards against finishStory() running twice
-    const STUCK_MS = 6000; // how long a student can be stuck on a word before it's flagged
+    const STUCK_MS = 3500;
 
     const sentenceWrap = document.getElementById('sentenceWrap');
     const wordPointer = document.getElementById('wordPointer');
@@ -1187,7 +1192,9 @@
         return;
       }
       try {
-        recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordingStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
       } catch (err) {
         showToast('Microphone access was blocked. Please allow it to record.');
         return;
@@ -1345,14 +1352,32 @@
     }
     /* ---------- Manual mode: listen for pronunciation ---------- */
     function normalizeWord(w){
-      return (w || '').toLowerCase().replace(/[^a-z']/g, '');
+      return (w || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z']/g, '');
+    }
+    function editDistance(a, b){
+      const previous = Array.from({length: b.length + 1}, (_, i) => i);
+      for (let i = 1; i <= a.length; i++){
+        let diagonal = previous[0];
+        previous[0] = i;
+        for (let j = 1; j <= b.length; j++){
+          const above = previous[j];
+          previous[j] = Math.min(previous[j] + 1, previous[j - 1] + 1, diagonal + (a[i - 1] === b[j - 1] ? 0 : 1));
+          diagonal = above;
+        }
+      }
+      return previous[b.length];
+    }
+    function consonantSignature(word){
+      return word.replace(/[aeiou]/g, '').replace(/(.)\1+/g, '$1');
     }
     function soundsLikeMatch(spoken, target){
       if (!spoken || !target) return false;
       if (spoken === target) return true;
-      // Tolerant match for partial recognitions / minor mis-hearings
-      if (spoken.length > 2 && target.length > 2 && (target.startsWith(spoken) || spoken.startsWith(target))) return true;
-      return false;
+      const shorter = Math.min(spoken.length, target.length);
+      const longer = Math.max(spoken.length, target.length);
+      if (shorter >= 4 && shorter / longer >= 0.8 && editDistance(spoken, target) <= 1) return true;
+      if (target.length >= 8 && spoken.length >= 8 && editDistance(spoken, target) <= 2) return true;
+      return shorter >= 3 && longer >= 4 && longer - shorter <= 1 && consonantSignature(spoken) === consonantSignature(target);
     }
 
     async function startListening(){
@@ -1369,7 +1394,7 @@
       }
       recognition.lang = 'en-US';
       recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.interimResults = false;
 
       recognition.onresult = handleRecognitionResult;
       recognition.onerror = (e) => {
@@ -1418,22 +1443,18 @@
     }
 
     function handleRecognitionResult(event){
-      const words = sentenceWrap.querySelectorAll('.word');
-      const targetEl = words[wordIndex];
-      if (!targetEl) return;
-      const targetWord = normalizeWord(targetEl.textContent);
-
-      let transcript = '';
+      const spokenWords = [];
       for (let i = event.resultIndex; i < event.results.length; i++){
-        transcript += ' ' + event.results[i][0].transcript;
+        const result = event.results[i];
+        if (!result.isFinal) continue;
+        spokenWords.push(...result[0].transcript.trim().split(/\s+/).map(normalizeWord).filter(Boolean));
       }
-      const spokenWords = transcript.trim().toLowerCase().split(/\s+/).map(normalizeWord).filter(Boolean);
-      if (spokenWords.length){
-        listenStatusEl.textContent = 'Heard: "' + spokenWords[spokenWords.length - 1] + '"';
-      }
+      if (!spokenWords.length) return;
+      listenStatusEl.textContent = 'Heard: "' + spokenWords.join(' ') + '"';
 
-      const gotIt = spokenWords.some(w => soundsLikeMatch(w, targetWord));
-      if (gotIt){
+      for (const spokenWord of spokenWords){
+        const targetEl = sentenceWrap.querySelectorAll('.word')[wordIndex];
+        if (!targetEl || !soundsLikeMatch(spokenWord, normalizeWord(targetEl.textContent))) break;
         targetEl.classList.add('correct-flash');
         setTimeout(() => targetEl.classList.remove('correct-flash'), 600);
         setWord(wordIndex + 1);
@@ -1452,10 +1473,10 @@
       const targetEl = words[wordIndex];
       if (targetEl){
         targetEl.classList.add('struggled');
-        const cleanWord = targetEl.textContent.replace(/[^a-zA-Z']/g, '');
+        const cleanWord = normalizeWord(targetEl.textContent);
         addStruggleWord(targetEl.textContent);
         sessionStruggles.push({ word: cleanWord, line: lineIndex + 1 });
-        showToast('Marked "' + cleanWord + '" as tricky \u2014 added to the struggle map');
+        showToast('Marked "' + cleanWord + '" as tricky — added to the struggle map');
       }
       setWord(wordIndex + 1);
     }

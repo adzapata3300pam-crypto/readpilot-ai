@@ -23,13 +23,15 @@ function current_user(): ?array
         return $user;
     }
 
-    $statement = db()->prepare('SELECT full_name FROM users WHERE id = ? LIMIT 1');
+    $statement = db()->prepare('SELECT full_name, profile_image FROM users WHERE id = ? LIMIT 1');
     $statement->execute([(int) $user['id']]);
-    $fullName = $statement->fetchColumn();
+    $account = $statement->fetch();
 
-    if ($fullName !== false) {
-        $user['full_name'] = (string) $fullName;
+    if ($account) {
+        $user['full_name'] = (string) $account['full_name'];
+        $user['profile_image'] = (string) ($account['profile_image'] ?? '');
         $_SESSION['readpilot_user']['full_name'] = $user['full_name'];
+        $_SESSION['readpilot_user']['profile_image'] = $user['profile_image'];
     }
 
     return $user;

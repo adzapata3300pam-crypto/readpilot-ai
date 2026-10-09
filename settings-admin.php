@@ -192,6 +192,7 @@
         <a class="nav-item" href="admin.php"><i class="bx bxs-dashboard"></i><span class="label">Dashboard</span></a>
         <a class="nav-item" href="users-admin.php"><i class="bx bx-user-circle"></i><span class="label">User Management</span></a>
         <a class="nav-item" href="gradesec-admin.php"><i class="bx bx-layer"></i><span class="label">Student Records</span></a>
+        <a class="nav-item" href="teacher-activity-admin.php"><i class="bx bx-pulse"></i><span class="label">Teacher Activity</span></a>
         <a class="nav-item" href="audit-trail-admin.php"><i class="bx bx-history"></i><span class="label">Audit Log</span></a>
         <a class="nav-item active" href="settings-admin.php"><i class="bx bx-cog"></i><span class="label">Settings</span></a>
       </nav>
@@ -200,7 +201,7 @@
     <div class="teacher-card">
       <div class="teacher-row">
         <div class="teacher-row-info">
-          <div class="avatar" id="sidebarAvatar">🛡️</div>
+          <div class="avatar" id="sidebarAvatar"><?php include __DIR__ . '/profile-avatar.php'; ?></div>
           <div>
             <div class="teacher-name" id="sidebarName"><?= htmlspecialchars(current_user()['full_name'], ENT_QUOTES, 'UTF-8') ?></div>
             <div class="teacher-role">System Administrator</div>
@@ -226,7 +227,6 @@
         </div>
         <div class="bell">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge">2</span>
         </div>
       </div>
     </div>
@@ -243,7 +243,7 @@
 
           <div class="pfp-row">
             <div class="pfp-wrap">
-              <div class="pfp-circle" id="pfpCircle">🛡️</div>
+              <div class="pfp-circle" id="pfpCircle"><?php include __DIR__ . '/profile-avatar.php'; ?></div>
               <div class="pfp-edit" id="pfpEditBtn" title="Change photo"><i class='bx bx-camera'></i></div>
               <input type="file" id="pfpInput" accept="image/*" style="display:none;">
             </div>
@@ -252,7 +252,7 @@
                 <button class="btn-outline" id="pfpUploadBtn"><i class='bx bx-upload'></i>Upload photo</button>
                 <button class="btn-outline danger" id="pfpRemoveBtn"><i class='bx bx-trash'></i>Remove</button>
               </div>
-              <div class="pfp-hint">JPG or PNG, square photos look best. Max 5MB.</div>
+              <div class="pfp-hint">JPG or PNG, square crop with a centered 1.2× zoom. Max 5MB.</div>
             </div>
           </div>
 
@@ -447,6 +447,7 @@
     </div>
   </div>
 
+  <script src="profile-photo.js"></script>
   <script>
     // ---- Hamburger: collapse sidebar ----
     // The collapsed/expanded state lives on <html data-sidebar="collapsed">
@@ -513,32 +514,73 @@
     document.getElementById('pfpEditBtn').addEventListener('click', openFilePicker);
     document.getElementById('pfpUploadBtn').addEventListener('click', openFilePicker);
 
+    function setProfilePhoto(source){
+      pfpCircle.replaceChildren();
+      sidebarAvatar.replaceChildren();
+      if (source){
+        [pfpCircle, sidebarAvatar].forEach(function(container){
+          var image = document.createElement('img');
+          image.src = source;
+          image.alt = 'Profile photo';
+          container.appendChild(image);
+        });
+      } else {
+        pfpCircle.innerHTML = '<i class="bx bxs-shield-alt-2" aria-hidden="true"></i>';
+        sidebarAvatar.innerHTML = '<i class="bx bxs-shield-alt-2" aria-hidden="true"></i>';
+      }
+    }
+
+    function accountRequest(data){
+      return fetch('account-api.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams(data)
+      }).then(function(response){
+        return response.json().then(function(result){
+          if (!response.ok) throw new Error(result.error || 'Unable to update profile photo');
+          return result;
+        });
+      });
+    }
+
     pfpInput.addEventListener('change', function(e){
       var file = e.target.files && e.target.files[0];
       if (!file) return;
       if (!file.type.startsWith('image/')){
         showToast('Please choose an image file');
+        pfpInput.value = '';
         return;
       }
       if (file.size > 5 * 1024 * 1024){
         showToast('Image is larger than 5MB');
+        pfpInput.value = '';
         return;
       }
-      var reader = new FileReader();
-      reader.onload = function(ev){
-        var url = ev.target.result;
-        pfpCircle.innerHTML = '<img src="' + url + '" alt="Profile photo">';
-        sidebarAvatar.innerHTML = '<img src="' + url + '" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-        showToast('Profile photo updated');
-      };
-      reader.readAsDataURL(file);
+      window.createProfilePhotoCrop(file)
+        .then(function(croppedFile){
+          var formData = new FormData();
+          formData.append('action', 'upload_profile_photo');
+          formData.append('profile_photo', croppedFile);
+          return fetch('account-api.php', {method:'POST', body:formData})
+            .then(function(response){
+              return response.json().then(function(result){
+                if (!response.ok) throw new Error(result.error || 'Unable to save profile photo');
+                return result;
+              });
+            });
+        })
+        .then(function(result){
+          setProfilePhoto(result.profile_image);
+          showToast('Profile photo saved');
+        })
+        .catch(function(error){ showToast(error.message); })
+        .finally(function(){ pfpInput.value = ''; });
     });
 
     document.getElementById('pfpRemoveBtn').addEventListener('click', function(){
-      pfpCircle.innerHTML = '🛡️';
-      sidebarAvatar.innerHTML = '🛡️';
-      pfpInput.value = '';
-      showToast('Profile photo removed');
+      accountRequest({action:'remove_profile_photo'})
+        .then(function(){ setProfilePhoto(''); pfpInput.value = ''; showToast('Profile photo removed'); })
+        .catch(function(error){ showToast(error.message); });
     });
 
     // ================= Name sync (profile field -> sidebar) =================

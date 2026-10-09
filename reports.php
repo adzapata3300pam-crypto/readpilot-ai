@@ -162,17 +162,6 @@
   }
   .btn-outline svg{width:15px;height:15px;}
   .btn-outline:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--green-dark);}
-  .bell{
-    position:relative;width:42px;height:42px;border-radius:12px;background:var(--card);border:1px solid var(--border);
-    display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex-shrink:0;cursor:pointer;
-  }
-  .bell svg{width:17px;height:17px;color:var(--ink);}
-  .bell .badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;font-size:10px;font-weight:800;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);}
-  .bell-panel{position:absolute;top:52px;right:0;width:260px;background:var(--card);border-radius:14px;box-shadow:0 10px 30px rgba(20,40,28,0.16);border:1px solid var(--border);padding:8px;display:none;z-index:40;}
-  .bell-panel.open{display:block;}
-  .bell-item{padding:10px 10px;border-radius:10px;font-size:12.5px;font-weight:600;color:var(--ink);}
-  .bell-item:hover{background:var(--bg);}
-  .bell-item .sub{color:var(--muted);font-weight:600;font-size:11px;margin-top:2px;}
 
   /* ---------- Stat cards ---------- */
   .stats{display:grid;grid-template-columns:repeat(4, 1fr);gap:20px;margin-bottom:22px;}
@@ -233,11 +222,11 @@
   .sel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:9px 13px;font-size:12.5px;font-weight:700;color:var(--ink);font-family:inherit;cursor:pointer;outline:none;}
   .report-table{width:100%;border-collapse:collapse;}
   .report-table thead th{
-    text-align:left;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;
+    text-align:center;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;
     padding:10px 8px;border-bottom:1px solid var(--border);
   }
-  .report-table thead th.num{text-align:right;}
-  .report-table tbody td{padding:12px 8px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+  .report-table thead th.num{text-align:center;}
+  .report-table tbody td{padding:12px 8px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;text-align:center;}
   .report-table tbody tr:last-child td{border-bottom:none;}
   .report-table tbody tr:hover{background:var(--bg);}
   .table-empty{text-align:center;color:var(--muted);font-weight:700;padding:28px 8px !important;}
@@ -245,7 +234,10 @@
   .t-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
   .t-name{font-weight:700;color:var(--ink);}
   .t-section{font-size:11px;font-weight:700;color:var(--muted);margin-top:1px;}
-  .num{text-align:right;font-weight:700;color:var(--ink);}
+  .num{text-align:center;font-weight:700;color:var(--ink);}
+  /* Keep the Student column left-aligned (avatar + name reads better that way) */
+  .report-table thead th:first-child,
+  .report-table tbody td:first-child{text-align:left;}
   .trend-pill{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:800;padding:3px 8px;border-radius:20px;}
   .trend-pill.up{background:var(--green-light);color:var(--green-dark);}
   .trend-pill.down{background:var(--red-light);color:var(--red);}
@@ -253,13 +245,21 @@
   .status-pill{font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px;white-space:nowrap;}
   .status-pill.ontrack{background:var(--green-light);color:var(--green-dark);}
   .status-pill.support{background:var(--red-light);color:var(--red);}
-  .t-view{font-size:12px;font-weight:800;color:var(--green-dark);cursor:pointer;white-space:nowrap;}
+  .t-view{font-size:12px;font-weight:800;color:var(--green-dark);cursor:pointer;white-space:nowrap;display:inline-block;}
 
   .ai-status-pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:12px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;}
   .ai-status-pill.rapid_growth{background:var(--green-light);color:var(--green-dark);}
   .ai-status-pill.on_track{background:rgba(111,191,90,0.18);color:var(--green-dark);}
   .ai-status-pill.steady{background:var(--teal-light);color:var(--teal);}
   .ai-status-pill.needs_intervention{background:var(--red-light);color:var(--red);}
+  .reading-recommendations{min-width:190px;max-width:260px;}
+  /* Recommended Reading column (8th) stays left-aligned */
+  .report-table thead th:nth-child(8),
+  .report-table tbody td:nth-child(8){text-align:left;}
+  .reading-recommendations-title{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.35px;margin-bottom:4px;}
+  .reading-recommendation{display:block;margin-top:5px;color:var(--green-dark);font-size:12px;font-weight:800;text-decoration:none;}
+  .reading-recommendation:hover{text-decoration:underline;}
+  .reading-recommendation-reason{display:block;margin-top:1px;color:var(--muted);font-size:10.5px;line-height:1.35;font-weight:600;}
   .ai-class-card{margin-bottom:20px;background:linear-gradient(135deg, rgba(111,191,90,0.12), rgba(79,163,184,0.08));border:1.5px solid rgba(111,191,90,0.3);border-radius:16px;padding:18px 22px;display:flex;align-items:flex-start;gap:16px;}
   .ai-class-icon{width:42px;height:42px;border-radius:12px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--green-dark);font-size:22px;flex-shrink:0;box-shadow:var(--shadow);}
 
@@ -295,11 +295,7 @@
   html[data-theme="dark"] .num{color:var(--ink);}
   html[data-theme="dark"] .tabs,
   html[data-theme="dark"] .btn-outline,
-  html[data-theme="dark"] .bell,
-  html[data-theme="dark"] .bell-panel,
   html[data-theme="dark"] .sel{background:var(--card);color:var(--ink);border-color:var(--border);}
-  html[data-theme="dark"] .bell svg{color:var(--ink);}
-  html[data-theme="dark"] .bell-item:hover,
   html[data-theme="dark"] .report-table tbody tr:hover{background:var(--bg);}
   html[data-theme="dark"] .tip-icon{background:#4a3c1a;}
   html[data-theme="dark"] .tip-title{color:var(--ink);}
@@ -328,7 +324,7 @@
 
   /* ---------- Print ---------- */
   @media print{
-    .sidebar, .btn-new, .btn-outline, .bell, .tip, .tab, .table-controls, .t-view{display:none !important;}
+    .sidebar, .btn-new, .btn-outline, .tip, .tab, .table-controls, .t-view{display:none !important;}
     .main{padding:0;max-width:100%;}
     body{display:block;background:#fff;}
     .panel, .stat-card{box-shadow:none;border:1px solid #ddd;}
@@ -447,8 +443,8 @@
       <div class="topbar-actions">
         <div class="tabs" id="rangeTabs">
           <div class="tab" data-range="week">This Week</div>
-          <div class="tab active" data-range="month">This Month</div>
-          <div class="tab" data-range="all">All Time</div>
+          <div class="tab" data-range="month">This Month</div>
+          <div class="tab active" data-range="all">All Time</div>
         </div>
         <button class="btn-outline" id="printBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
@@ -458,15 +454,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
           Export CSV
         </button>
-        <div class="bell" id="bellBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge" id="bellBadge">3</span>
-          <div class="bell-panel" id="bellPanel">
-            <div class="bell-item">Monthly report is ready <div class="sub">Export it as a CSV to share</div></div>
-            <div class="bell-item">Class average WPM is up this month <div class="sub">Keep up the momentum</div></div>
-            <div class="bell-item">2 students need a check-in <div class="sub">See "Needs Attention" below</div></div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -501,7 +488,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M17 3H7v6a5 5 0 0 0 10 0V3Z"/><path d="M7 5H4a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4M17 5h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4"/></svg>
             Top Readers
           </div>
-          <div class="panel-sub">Biggest WPM gains</div>
+          <div class="panel-sub" id="topReadersSub">Highest average WPM</div>
         </div>
         <div id="topReadersList"></div>
       </div>
@@ -554,6 +541,7 @@
               <th class="num">Trend</th>
               <th>AI Diagnostic</th>
               <th>Status</th>
+              <th>Recommended Reading</th>
               <th></th>
             </tr>
           </thead>
@@ -583,20 +571,7 @@
     // ============================================================
     // Roster
     // ============================================================
-    let roster = [
-      {id:1,  name:'Carmen Reyes',      section:'Section A', color:'#6fbf5a', baseWpm:300, growth:55, baseAcc:93, accGrowth:6},
-      {id:2,  name:'Eva Mendoza',       section:'Section A', color:'#c9924d', baseWpm:280, growth:35, baseAcc:90, accGrowth:5},
-      {id:3,  name:'Isabella Ramos',    section:'Section A', color:'#f2a13a', baseWpm:265, growth:40, baseAcc:87, accGrowth:6},
-      {id:4,  name:'Diego Santos',      section:'Section A', color:'#8b6bd1', baseWpm:230, growth:30, baseAcc:85, accGrowth:5},
-      {id:5,  name:'Maya Cruz',         section:'Section B', color:'#4fa3b8', baseWpm:250, growth:38, baseAcc:88, accGrowth:6},
-      {id:6,  name:'Liam Torres',       section:'Section B', color:'#ea5d5d', baseWpm:180, growth:20, baseAcc:76, accGrowth:4},
-      {id:7,  name:'Sofia Delgado',     section:'Section B', color:'#6fbf5a', baseWpm:240, growth:28, baseAcc:88, accGrowth:5},
-      {id:8,  name:'Mateo Villanueva',  section:'Section B', color:'#f2a13a', baseWpm:200, growth:25, baseAcc:81, accGrowth:5},
-      {id:9,  name:'Ana Bautista',      section:'Section C', color:'#8b6bd1', baseWpm:165, growth:15, baseAcc:73, accGrowth:3},
-      {id:10, name:'Noah Garcia',       section:'Section C', color:'#4fa3b8', baseWpm:290, growth:32, baseAcc:92, accGrowth:5},
-      {id:11, name:'Camila Flores',     section:'Section C', color:'#ea5d5d', baseWpm:220, growth:26, baseAcc:85, accGrowth:5},
-      {id:12, name:'Ethan Morales',     section:'Section C', color:'#c9924d', baseWpm:250, growth:30, baseAcc:89, accGrowth:5},
-    ];
+    let roster = [];
     function studentById(id){ return roster.find(r=>r.id===id); }
     function initials(name){ return name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase(); }
     function escapeHtml(value){
@@ -604,52 +579,26 @@
     }
 
     // ============================================================
-    // Deterministic pseudo-random generator (so the report looks
-    // the same on every load, like a real stored dataset would)
-    // ============================================================
-    function mulberry32(seed){
-      return function(){
-        seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    }
-    const rand = mulberry32(2026);
-    function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-
     const DAY = 24*60*60*1000;
-    const RANGE_DAYS = 60; // dataset spans the last 60 days
-
     let sessions = [];
-    (function generateSessions(){
-      let id = 1;
-      roster.forEach(student=>{
-        let d = Math.floor(rand()*3); // stagger start day per student
-        while(d <= RANGE_DAYS-1){
-          const progress = 1 - (d/RANGE_DAYS); // 0 = 60 days ago, 1 = today
-          const wpm = Math.round(student.baseWpm - student.growth + student.growth*progress + (rand()*16-8));
-          const accuracy = clamp(Math.round(student.baseAcc - student.accGrowth + student.accGrowth*progress + (rand()*6-3)), 55, 100);
-          sessions.push({id:id++, studentId:student.id, wpm:Math.max(80,wpm), accuracy, ts:Date.now() - d*DAY - Math.floor(rand()*DAY)});
-          d += 2 + Math.floor(rand()*3); // read roughly every 2-4 days
-        }
-      });
-    })();
+    let recommendationResources = [];
+    let recommendationLoadError = false;
 
     // ============================================================
     // State
     // ============================================================
-    let activeRange = 'month'; // week | month | all
+    let activeRange = 'all'; // week | month | all
     let sectionFilter = 'all'; // 'all' or a section name
     let extraSectionNames = []; // sections returned by the API (may include empty ones)
 
     function rangeDays(){
       if(activeRange==='week') return 7;
       if(activeRange==='month') return 30;
-      return RANGE_DAYS;
+      return Number.POSITIVE_INFINITY;
     }
-    function inCurrentPeriod(ts){ return Date.now()-ts <= rangeDays()*DAY; }
+    function inCurrentPeriod(ts){ return activeRange==='all' || Date.now()-ts <= rangeDays()*DAY; }
     function inPreviousPeriod(ts){
+      if(activeRange==='all') return false;
       const d = rangeDays();
       const age = Date.now()-ts;
       return age > d*DAY && age <= 2*d*DAY;
@@ -709,16 +658,91 @@
     function computeStudentStats(){
       return roster.map(student=>{
         const current = sessions.filter(s=>s.studentId===student.id && inCurrentPeriod(s.ts));
+        const studentSessions = sessions.filter(s=>s.studentId===student.id);
         const previous = sessions.filter(s=>s.studentId===student.id && inPreviousPeriod(s.ts));
         const wpm = Math.round(avg(current,'wpm'));
         const accuracy = Math.round(avg(current,'accuracy'));
         const prevWpm = avg(previous,'wpm');
-        const trendPct = (prevWpm>0 && current.length) ? Math.round(((wpm-prevWpm)/prevWpm)*100) : (current.length? 100 : 0);
+        const trendPct = activeRange==='all'
+          ? null
+          : (prevWpm>0 && current.length) ? Math.round(((wpm-prevWpm)/prevWpm)*100) : (current.length? 100 : 0);
         const status = (current.length===0) ? 'unknown' : (accuracy < 82 ? 'support' : 'ontrack');
         return {
-          student, sessionsCount: current.length, wpm, accuracy, trendPct, status
+          student, sessionsCount: current.length, wpm, accuracy, trendPct, status,
+          recommendations: recommendReading(student, current.length ? current : studentSessions)
         };
       });
+    }
+
+    function recommendReading(student, studentSessions){
+      if(!studentSessions.length || !recommendationResources.length) return [];
+      const orderedSessions = [...studentSessions].sort((a,b)=>b.ts-a.ts);
+      const latest = orderedSessions[0];
+      const latestWithEvaluation = orderedSessions.find(session =>
+        session.ai_phonics || session.ai_comprehension_insight || session.ai_comprehension_rating ||
+        session.ai_fluency || session.ai_status || session.ai_next_step ||
+        (Array.isArray(session.ai_struggles) && session.ai_struggles.length)
+      ) || latest;
+      const flattenSignal = value => Array.isArray(value) ? value.join(' ') : String(value || '');
+      const sessionSignals = orderedSessions.slice(0,3).flatMap(session => [
+        session.ai_phonics, session.ai_comprehension_insight, session.ai_narrative,
+        session.ai_next_step, session.ai_struggles, session.tricky_words
+      ].map(flattenSignal)).join(' ').toLowerCase();
+      const signals = [
+        student.ai_phonics, student.ai_comprehension_insight, student.ai_narrative,
+        student.ai_next_step, student.ai_struggles, sessionSignals
+      ].map(flattenSignal).join(' ').toLowerCase();
+      const trickyWords = [...new Set(orderedSessions.slice(0,3)
+        .flatMap(session => String(session.tricky_words || '').split(/[,;\n]+/))
+        .map(word => word.trim()).filter(Boolean))];
+      const phonicsText = [
+        student.ai_phonics, student.ai_struggles,
+        ...orderedSessions.slice(0,3).flatMap(session => [session.ai_phonics, session.ai_struggles])
+      ].map(flattenSignal).join(' ').toLowerCase();
+      const phonicsConcern = /(?:phonics|decod|pronounc|syllab|letter.sound|word.level).{0,70}(?:difficulty|struggl|support|reinforc|below|inaccur|hesitat|challeng|weak)|(?:difficulty|struggl|support|reinforc|below|inaccur|hesitat|challeng|weak).{0,70}(?:phonics|decod|pronounc|syllab|letter.sound|word.level)/.test(phonicsText);
+      const phonicsFocus = trickyWords.length > 0 || Number(latest.accuracy) < 85 || phonicsConcern;
+      const comprehensionRating = latestWithEvaluation.ai_comprehension_rating || student.ai_comprehension_rating;
+      const fluencyRating = latestWithEvaluation.ai_fluency || student.ai_fluency;
+      const comprehensionConcern = ['needs_support', 'partial'].includes(String(comprehensionRating).toLowerCase()) ||
+        /comprehension.{0,60}(?:difficulty|struggl|support|reinforc|below|partial)|(?:difficulty|struggl|support|reinforc|below|partial).{0,60}comprehension|score fell below target|key recall|deepen inference/.test(signals);
+      const lowFluency = ['emerging', 'approaching'].includes(String(fluencyRating).toLowerCase()) ||
+        (Number(latest.wpm) > 0 && Number(latest.wpm) < 80);
+      let focus = 'fluency';
+      let reason = 'Build smoother, more accurate reading with a short text suited to repeated practice.';
+      if(phonicsFocus){
+        focus = 'phonics';
+        reason = trickyWords.length
+          ? `Practice decoding after difficulty with ${trickyWords.slice(0,3).join(', ')}.`
+          : 'Practice sound patterns and decoding to strengthen reading accuracy.';
+      } else if(comprehensionConcern){
+        focus = 'comprehension';
+        reason = 'Practice using text clues, retelling key details, and identifying the main idea.';
+      } else if(lowFluency){
+        focus = 'fluency';
+        reason = 'Build reading pace and phrasing through short, repeated-reading practice.';
+      } else if(Number(latest.wpm) >= 220 && Number(latest.accuracy) >= 90){
+        focus = 'comprehension';
+        reason = 'Extend strong reading fluency with a text that builds inference and main-idea skills.';
+      }
+
+      const focusTerms = {
+        phonics: ['phonics', 'decoding', 'phonics practice', 'short vowels', 'syllables'],
+        fluency: ['fluency', 'repeated reading', 'fluency practice'],
+        comprehension: ['comprehension', 'main idea', 'inference', 'comprehension practice']
+      }[focus];
+      const scored = recommendationResources.map(resource=>{
+        const searchable = [...(resource.tags || []), resource.title, resource.genre, resource.description]
+          .map(value=>String(value || '').toLowerCase()).join(' ');
+        const matchingTerms = focusTerms.filter(term=>searchable.includes(term));
+        if(!matchingTerms.length) return null;
+        let score = matchingTerms.length * 100;
+        if(focus === 'phonics' && /syllab|multi.syllab/.test(signals) && /syllab/.test(searchable)) score += 30;
+        if(focus === 'phonics' && trickyWords.length && /short vowels/.test(searchable) && trickyWords.every(word=>word.length <= 5)) score += 15;
+        if(Number(latest.accuracy) < 85 && /grade 2|beginner/i.test(resource.level)) score += 8;
+        if(Number(latest.accuracy) >= 90 && /grade 3|intermediate/i.test(resource.level)) score += 5;
+        return {resource, score};
+      }).filter(Boolean).sort((a,b)=>b.score-a.score || a.resource.words-b.resource.words);
+      return scored.slice(0,2).map(({resource})=>({resource, reason}));
     }
 
     // ============================================================
@@ -731,39 +755,77 @@
     }
 
     function renderTrendChart(){
+      const periodSessions = sessions.filter(s=>inCurrentPeriod(s.ts));
+      const chartWrap = document.getElementById('trendChartWrap');
+      if(!periodSessions.length){
+        chartWrap.innerHTML = `<div style="font-size:12.5px;color:var(--muted);font-weight:600;padding:20px 0;">${activeRange==='all'?'No saved reading sessions found for this teacher yet.':'No reading sessions found in this period. Choose All Time to see older saved sessions.'}</div>`;
+        return;
+      }
+
       const cfg = bucketConfig();
       const points = [];
-      let lastVal = Math.round(avg(sessions.filter(s=>inCurrentPeriod(s.ts)),'wpm')) || 220;
-
-      for(let i=cfg.count-1; i>=0; i--){
-        const endAgoDays = i*cfg.spanDays;
-        const startAgoDays = endAgoDays + cfg.spanDays;
-        const bucketSessions = sessions.filter(s=>{
-          const age = Date.now()-s.ts;
-          return age >= endAgoDays*DAY && age < startAgoDays*DAY;
-        });
-        const val = bucketSessions.length ? Math.round(avg(bucketSessions,'wpm')) : lastVal;
-        lastVal = val;
-        const labelDate = new Date(Date.now() - endAgoDays*DAY);
-        points.push({label: labelDate.toLocaleDateString(undefined, cfg.fmt), value: val});
+      if(activeRange==='all'){
+        const firstTs = periodSessions.reduce((first,s)=>Math.min(first,s.ts),Infinity);
+        const lastTs = periodSessions.reduce((last,s)=>Math.max(last,s.ts),-Infinity);
+        const count = Math.min(6, Math.max(1, Math.ceil((lastTs-firstTs)/DAY)+1));
+        const span = Math.max((lastTs-firstTs+1)/count, 1);
+        for(let i=0; i<count; i++){
+          const start = firstTs+i*span;
+          const end = i===count-1 ? lastTs+1 : firstTs+(i+1)*span;
+          const bucketSessions = periodSessions.filter(s=>s.ts>=start && s.ts<end);
+          points.push({
+            label:new Date(start).toLocaleDateString(undefined,{month:'short',day:'numeric'}),
+            value:bucketSessions.length?Math.round(avg(bucketSessions,'wpm')):null
+          });
+        }
+      } else {
+        for(let i=cfg.count-1; i>=0; i--){
+          const endAgoDays = i*cfg.spanDays;
+          const startAgoDays = endAgoDays + cfg.spanDays;
+          const bucketSessions = periodSessions.filter(s=>{
+            const age = Date.now()-s.ts;
+            return age >= endAgoDays*DAY && age < startAgoDays*DAY;
+          });
+          const labelDate = new Date(Date.now() - endAgoDays*DAY);
+          points.push({
+            label:labelDate.toLocaleDateString(undefined,cfg.fmt),
+            value:bucketSessions.length?Math.round(avg(bucketSessions,'wpm')):null
+          });
+        }
       }
 
       const W = 640, H = 220, padL = 34, padR = 14, padT = 16, padB = 26;
-      const vals = points.map(p=>p.value);
+      const vals = points.filter(p=>p.value!==null).map(p=>p.value);
       const minV = Math.min(...vals), maxV = Math.max(...vals);
       const range = Math.max(maxV-minV, 20);
       const yFor = v => padT + (1 - (v-minV)/range) * (H-padT-padB);
-      const xFor = i => padL + (i/(points.length-1)) * (W-padL-padR);
+      const xFor = i => points.length===1
+        ? (W/2)
+        : padL + (i/(points.length-1)) * (W-padL-padR);
 
-      const linePath = points.map((p,i)=>`${i===0?'M':'L'} ${xFor(i).toFixed(1)} ${yFor(p.value).toFixed(1)}`).join(' ');
-      const areaPath = `${linePath} L ${xFor(points.length-1).toFixed(1)} ${H-padB} L ${xFor(0).toFixed(1)} ${H-padB} Z`;
+      const segments = [];
+      points.forEach((point,index)=>{
+        if(point.value===null) return;
+        let segment = segments[segments.length-1];
+        if(!segment || segment[segment.length-1].index!==index-1){
+          segment = [];
+          segments.push(segment);
+        }
+        segment.push({index,value:point.value});
+      });
+      const linePath = segments.map(segment=>segment.map((point,index)=>
+        `${index===0?'M':'L'} ${xFor(point.index).toFixed(1)} ${yFor(point.value).toFixed(1)}`
+      ).join(' ')).join(' ');
+      const areaPath = points.every(point=>point.value!==null)
+        ? `${linePath} L ${xFor(points.length-1).toFixed(1)} ${H-padB} L ${xFor(0).toFixed(1)} ${H-padB} Z`
+        : '';
 
       const gridLines = [0,1,2,3].map(i=>{
         const y = padT + (i/3)*(H-padT-padB);
         return `<line class="grid-line" x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}"/>`;
       }).join('');
 
-      const dots = points.map((p,i)=>`
+      const dots = points.map((p,i)=>p.value===null?'':`
         <circle class="point" cx="${xFor(i).toFixed(1)}" cy="${yFor(p.value).toFixed(1)}" r="4" fill="#fff" stroke="var(--green-dark)" stroke-width="2">
           <title>${p.label}: ${p.value} WPM</title>
         </circle>`).join('');
@@ -771,7 +833,7 @@
       const labels = points.map((p,i)=>`
         <text class="axis-label" x="${xFor(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${p.label}</text>`).join('');
 
-      document.getElementById('trendChartWrap').innerHTML = `
+      chartWrap.innerHTML = `
         <svg class="trend-chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
@@ -780,7 +842,7 @@
             </linearGradient>
           </defs>
           ${gridLines}
-          <path d="${areaPath}" fill="url(#trendFill)" stroke="none"/>
+          ${areaPath?`<path d="${areaPath}" fill="url(#trendFill)" stroke="none"/>`:''}
           <path d="${linePath}" fill="none" stroke="var(--green-dark)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           ${dots}
           ${labels}
@@ -816,8 +878,14 @@
     // ============================================================
     function renderLists(stats){
       const active = stats.filter(s=>s.sessionsCount>0);
+      document.getElementById('topReadersSub').textContent = activeRange==='all'
+        ? 'Highest average WPM across all sessions'
+        : 'Biggest WPM gains';
 
-      const top = [...active].sort((a,b)=>b.trendPct-a.trendPct).slice(0,4);
+      const top = [...active].sort((a,b)=>activeRange==='all'
+        ? b.wpm-a.wpm
+        : b.trendPct-a.trendPct
+      ).slice(0,4);
       document.getElementById('topReadersList').innerHTML = top.length ? top.map((s,i)=>`
         <div class="lead-row">
           <div class="lead-rank">${i+1}</div>
@@ -826,11 +894,11 @@
             <div class="lead-name">${escapeHtml(s.student.name)}</div>
             <div class="lead-sub">${s.wpm} WPM avg • ${s.sessionsCount} sessions</div>
           </div>
-          <div class="lead-metric ${s.trendPct>=0?'up':'down'}">${s.trendPct>=0?'▲':'▼'} ${Math.abs(s.trendPct)}%</div>
+          <div class="lead-metric ${s.trendPct===null?'':(s.trendPct>=0?'up':'down')}">${s.trendPct===null?s.wpm+' WPM':`${s.trendPct>=0?'▲':'▼'} ${Math.abs(s.trendPct)}%`}</div>
         </div>
       `).join('') : `<div style="font-size:12.5px;color:var(--muted);font-weight:600;padding:10px 0;">No sessions in this period yet.</div>`;
 
-      const needs = [...active].filter(s=>s.status==='support' || s.trendPct<0).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);
+      const needs = [...active].filter(s=>s.status==='support' || (s.trendPct!==null && s.trendPct<0)).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);
       document.getElementById('needsAttentionList').innerHTML = needs.length ? needs.map(s=>`
         <div class="lead-row">
           <div class="lead-rank">!</div>
@@ -839,7 +907,7 @@
             <div class="lead-name">${escapeHtml(s.student.name)}</div>
             <div class="lead-sub">${s.accuracy}% accuracy • ${s.sessionsCount} sessions</div>
           </div>
-          <div class="lead-metric ${s.trendPct>=0?'up':'down'}">${s.trendPct>=0?'▲':'▼'} ${Math.abs(s.trendPct)}%</div>
+          <div class="lead-metric ${s.trendPct===null?'':(s.trendPct>=0?'up':'down')}">${s.trendPct===null?'—':`${s.trendPct>=0?'▲':'▼'} ${Math.abs(s.trendPct)}%`}</div>
         </div>
       `).join('') : `<div style="font-size:12.5px;color:var(--muted);font-weight:600;padding:10px 0;">Nobody needs extra attention right now — great job! ♥</div>`;
     }
@@ -872,7 +940,7 @@
 
       if(list.length===0){
         document.getElementById('reportTableBody').innerHTML =
-          `<tr><td class="table-empty" colspan="8">No students in ${sectionFilter==='all' ? 'this view' : escapeHtml(sectionFilter)} yet.</td></tr>`;
+          `<tr><td class="table-empty" colspan="9">No students in ${sectionFilter==='all' ? 'this view' : escapeHtml(sectionFilter)} yet.</td></tr>`;
         return;
       }
 
@@ -891,7 +959,7 @@
           <td class="num">${s.sessionsCount ? s.wpm : '—'}</td>
           <td class="num hide-sm">${s.sessionsCount ? s.accuracy+'%' : '—'}</td>
           <td class="num">
-            ${s.sessionsCount ? `<span class="trend-pill ${s.trendPct>0?'up':(s.trendPct<0?'down':'flat')}">${s.trendPct>0?'▲':(s.trendPct<0?'▼':'—')} ${Math.abs(s.trendPct)}%</span>` : '—'}
+            ${s.sessionsCount ? (s.trendPct===null?'—':`<span class="trend-pill ${s.trendPct>0?'up':(s.trendPct<0?'down':'flat')}">${s.trendPct>0?'▲':(s.trendPct<0?'▼':'—')} ${Math.abs(s.trendPct)}%</span>`) : '—'}
           </td>
           <td>
             ${s.student.ai_progress_status
@@ -903,6 +971,11 @@
             ${s.sessionsCount
               ? `<span class="status-pill ${s.status}">${s.status==='support'?'Needs Support':'On Track'}</span>`
               : `<span class="status-pill" style="background:var(--bg);color:var(--muted);">No Sessions</span>`}
+          </td>
+          <td>
+            ${s.recommendations.length
+              ? `<div class="reading-recommendations"><div class="reading-recommendations-title">AI-matched next reads</div>${s.recommendations.map(item=>`<a class="reading-recommendation" href="resources.php?resource_id=${encodeURIComponent(item.resource.id)}">${escapeHtml(item.resource.title)}<span class="reading-recommendation-reason">${escapeHtml(item.reason)}</span></a>`).join('')}</div>`
+              : `<span style="color:var(--muted);font-size:11px;">${recommendationLoadError ? 'Could not load reading recommendations.' : (!sessions.some(session=>session.studentId===s.student.id) ? 'Complete a session for a reading match' : (!recommendationResources.length ? 'No reading materials are available to match.' : 'No matching reading material found.'))}</span>`}
           </td>
           <td><span class="t-view" data-id="${s.student.id}">View Progress →</span></td>
         </tr>
@@ -968,7 +1041,7 @@
     // ============================================================
     document.getElementById('exportBtn').addEventListener('click', ()=>{
       const stats = sortedStats(computeStudentStats());
-      const rows = [['Student','Section','Sessions','Avg WPM','Avg Accuracy (%)','Trend (%)','Status','AI Progress Status','AI Narrative','AI Recommended Action']];
+      const rows = [['Student','Section','Sessions','Avg WPM','Avg Accuracy (%)','Trend (%)','Status','AI Progress Status','AI Narrative','AI Recommended Action','AI Recommended Reading']];
       stats.forEach(s=>{
         rows.push([
           s.student.name,
@@ -976,11 +1049,12 @@
           s.sessionsCount,
           s.sessionsCount ? s.wpm : '',
           s.sessionsCount ? s.accuracy : '',
-          s.sessionsCount ? s.trendPct : '',
+          s.sessionsCount && s.trendPct!==null ? s.trendPct : '',
           s.sessionsCount ? (s.status==='support'?'Needs Support':'On Track') : 'No Sessions',
           s.student.ai_progress_status ? s.student.ai_progress_status.replace(/_/g, ' ') : (s.sessionsCount ? 'Evaluating' : 'No Data'),
           s.student.ai_narrative || '',
-          s.student.ai_next_step || ''
+          s.student.ai_next_step || '',
+          s.recommendations.map(item=>`${item.resource.title}: ${item.reason}`).join(' | ')
         ]);
       });
       const csv = rows.map(r => r.map(v => {
@@ -1022,14 +1096,6 @@
         localStorage.setItem('readpilot-sidebar', 'collapsed');
       }
     });
-    const bellBtn = document.getElementById('bellBtn');
-    const bellPanel = document.getElementById('bellPanel');
-    bellBtn.addEventListener('click', e=>{
-      e.stopPropagation();
-      bellPanel.classList.toggle('open');
-      document.getElementById('bellBadge').style.display = 'none';
-    });
-    document.addEventListener('click', ()=>bellPanel.classList.remove('open'));
     document.getElementById('tipClose').addEventListener('click', function(){
       this.closest('.tip').style.display = 'none';
     });
@@ -1037,31 +1103,40 @@
     // Init
     // ============================================================
     renderAll();
-    fetch('student-api.php?view=reports').then(response=>response.json()).then(result=>{
-      if (Array.isArray(result.students) && Array.isArray(result.sessions)) {
-        roster = result.students.map(student=>({
-          id:Number(student.id),
-          name:student.name,
-          section:student.section || '',
-          color:student.color,
-          baseWpm:Number(student.wpm),
-          growth:0,
-          baseAcc:Number(student.accuracy),
-          accGrowth:0,
-          ai_progress_status: student.ai_progress_status || '',
-          ai_narrative: student.ai_narrative || '',
-          ai_phonics: student.ai_phonics || '',
-          ai_next_step: student.ai_next_step || ''
-        }));
-
-        sessions = result.sessions.map(session=>({...session, id:Number(session.id), studentId:Number(session.studentId)}));
-        // Include empty sections, matching the Sections page.
-        extraSectionNames = Array.isArray(result.sections)
-          ? result.sections.map(section=> typeof section === 'string' ? section : (section && section.name) || '').filter(Boolean)
-          : [];
-        renderAll();
+    fetch('student-api.php?view=reports').then(response=>{
+      if(!response.ok) throw new Error(`Reports request failed (${response.status})`);
+      return response.json();
+    }).then(result=>{
+      if (!Array.isArray(result.students) || !Array.isArray(result.sessions) || !Array.isArray(result.recommendation_resources)) {
+        throw new Error('Reports response is missing recommendation data');
       }
-    }).catch(()=>{});
+      roster = result.students.map(student=>({
+        id:Number(student.id),
+        name:student.name,
+        section:student.section || '',
+        color:student.color,
+        ai_progress_status: student.ai_progress_status || '',
+        ai_narrative: student.ai_narrative || '',
+        ai_phonics: student.ai_phonics || '',
+        ai_comprehension_insight: student.ai_comprehension_insight || '',
+        ai_comprehension_rating: student.ai_comprehension_rating || '',
+        ai_fluency: student.ai_fluency || '',
+        ai_struggles: Array.isArray(student.ai_struggles) ? student.ai_struggles : [],
+        ai_next_step: student.ai_next_step || ''
+      }));
+
+      sessions = result.sessions.map(session=>({...session, id:Number(session.id), studentId:Number(session.studentId), ts:Number(session.ts), wpm:Number(session.wpm), accuracy:Number(session.accuracy)}));
+      recommendationResources = result.recommendation_resources;
+      // Include empty sections, matching the Sections page.
+      extraSectionNames = Array.isArray(result.sections)
+        ? result.sections.map(section=> typeof section === 'string' ? section : (section && section.name) || '').filter(Boolean)
+        : [];
+      renderAll();
+    }).catch(error=>{
+      recommendationLoadError = true;
+      console.error('Unable to load student reading recommendations:', error);
+      renderAll();
+    });
   </script>
   <script src="shared-ui.js"></script>
 </body>

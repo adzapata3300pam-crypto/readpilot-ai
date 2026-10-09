@@ -20,7 +20,7 @@
   } catch (e) {
     /* localStorage unavailable (e.g. private browsing) — default to light */
   }
- 
+
   try {
     var savedSidebar = localStorage.getItem('readpilot-sidebar');
     if (savedSidebar === 'collapsed') {
@@ -32,80 +32,111 @@
 })();
 </script>
 <style>
-  /* ================= Recommendations page (extends style.css) =================
-     Dark-mode variables, .controls/.tabs/.sort-select, .overlay/.modal/.form-row,
-     and .toast now live in style.css. Only recommendation-card-specific rules
-     (and their dark-mode tweaks) stay in this file. */
+  /* ================= Recommendations page (simplified) =================
+     Same colors, rounded cards and pixel-style hover as the rest of ReadPilot,
+     but with bigger text, plainer words, fewer things on screen at once,
+     and one clear main button per card. */
 
-  /* ---- Recommendation card ---- */
-  .rec-list{display:flex;flex-direction:column;gap:16px;margin-bottom:26px;}
-  .rec-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;transition:box-shadow .15s ease;}
+  /* ---- "Waiting for you" banner ---- */
+  .wait-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--orange-light);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;}
+  .wait-banner.all-clear{background:var(--green-light);}
+  .wait-banner .wb-icon{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.75);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--orange);flex-shrink:0;}
+  .wait-banner.all-clear .wb-icon{color:var(--green-dark);}
+  .wait-banner .wb-text{flex-grow:1;min-width:200px;font-size:15px;font-weight:800;color:var(--ink);line-height:1.35;}
+  .wait-banner .wb-text small{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-top:2px;}
+  html[data-theme="dark"] .wait-banner .wb-icon{background:rgba(0,0,0,0.25);}
+  .progress-snapshot{display:flex;align-items:flex-start;gap:10px;background:var(--card);border-left:4px solid var(--purple);border-radius:12px;padding:12px 15px;margin-bottom:16px;color:var(--ink);font-size:13px;font-weight:700;line-height:1.5;box-shadow:var(--shadow);}
+  .progress-snapshot .bx{flex:0 0 auto;margin-top:1px;color:var(--purple);font-size:18px;}
+
+  /* ---- Simple filter row ---- */
+  .simple-tabs{display:flex;gap:8px;flex-wrap:wrap;}
+  .simple-tabs .tab{font-size:13.5px;font-weight:800;padding:9px 16px;border-radius:12px;cursor:pointer;}
+  .simple-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .simple-controls .sort-wrap{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);}
+  .simple-controls .sort-select{font-size:13px;padding:8px 10px;}
+
+  /* ---- Recommendation list ---- */
+  .rec-list{display:flex;flex-direction:column;gap:14px;margin-bottom:22px;}
+  .rec-section-group{display:flex;flex-direction:column;gap:12px;margin-bottom:6px;}
+  .rec-section-group.is-hidden{display:none;}
+  .rec-section-heading{display:flex;align-items:center;gap:10px;padding:0 2px;color:var(--ink);font-family:'Poppins',sans-serif;font-size:16.5px;font-weight:700;}
+  .rec-section-heading .count{font:700 12px 'Nunito',sans-serif;color:var(--muted);}
+
+  .rec-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;border-left:6px solid var(--border);}
   .rec-card.is-hidden{display:none;}
+  .rec-card[data-status="pending"]{border-left-color:var(--orange);}
+  .rec-card[data-status="approved"]{border-left-color:var(--tan);}
+  .rec-card[data-status="applied"]{border-left-color:var(--green);}
+  .rec-card[data-status="dismissed"]{border-left-color:var(--muted);}
 
-  .rec-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
+  .rec-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
   .rec-who{display:flex;align-items:center;gap:12px;}
-  .rec-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0;}
-  .rec-name{font-size:14.5px;font-weight:700;color:var(--ink);}
-  .rec-meta{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:600;flex-wrap:wrap;}
-  .rec-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--muted);}
+  .rec-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0;}
+  .rec-name{font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;color:var(--ink);}
+  .rec-meta{font-size:12.5px;color:var(--muted);font-weight:700;margin-top:1px;}
 
-  .rec-tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  .src-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;padding:5px 11px;border-radius:20px;white-space:nowrap;}
-  .src-pill.ai{background:var(--purple-light);color:var(--purple);}
-  .src-pill.specialist{background:var(--teal-light);color:var(--teal);}
-  .src-pill .bx{font-size:13px;}
-  .status-pill{font-size:11px;font-weight:800;padding:5px 11px;border-radius:20px;white-space:nowrap;}
-  .status-pill.pending{background:var(--orange-light);color:var(--orange);}
+  .status-pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;padding:6px 12px;border-radius:20px;white-space:nowrap;}
+  .status-pill .bx{font-size:14px;}
+  .status-pill.pending{background:var(--orange-light);color:#b36b0a;}
   .status-pill.approved{background:var(--tan-light);color:var(--tan);}
   .status-pill.applied{background:var(--green-light);color:var(--green-dark);}
+  .status-pill.dismissed{background:var(--bg);color:var(--muted);}
+  html[data-theme="dark"] .status-pill.pending{color:var(--orange);}
 
-  .rec-body{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;}
-  @media (max-width:900px){.rec-body{grid-template-columns:1fr;}}
+  .rec-ask{font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:12px;line-height:1.5;}
 
-  .rec-section-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:9px;display:flex;align-items:center;gap:6px;}
-  .rec-section-label .bx{font-size:14px;color:var(--green-dark);}
+  .rec-block{margin-bottom:12px;}
+  .rec-label{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+  .rec-label .bx{font-size:15px;color:var(--green-dark);}
 
-  .word-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
-  .word-chip{display:flex;align-items:center;gap:6px;background:var(--red-light);color:#b23f3f;font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:10px;}
-  .word-chip .miss-count{background:rgba(178,63,63,0.15);font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:8px;}
-  html[data-theme="dark"] .word-chip{color:#f0a3a3;}
-  html[data-theme="dark"] .word-chip .miss-count{background:rgba(240,128,127,0.18);}
+  .skill-focus{display:flex;align-items:flex-start;gap:9px;background:var(--purple-light);color:var(--ink);border-radius:12px;padding:11px 14px;font-size:14.5px;font-weight:800;line-height:1.45;}
+  .skill-focus .bx{color:var(--purple);font-size:18px;flex-shrink:0;margin-top:1px;}
+  html[data-theme="dark"] .skill-focus{background:rgba(139,107,209,0.18);}
 
-  .skill-focus{display:inline-flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;color:var(--ink);}
-  .skill-focus .bx{color:var(--purple);font-size:15px;}
+  .practice-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .practice-list li{display:flex;align-items:flex-start;gap:9px;font-size:14px;color:var(--ink);font-weight:600;line-height:1.5;}
+  .practice-list li .bx{color:var(--green-dark);font-size:17px;margin-top:1px;flex-shrink:0;}
 
-  .practice-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;}
-  .practice-list li{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:#3d5240;font-weight:600;line-height:1.45;}
-  .practice-list li .bx{color:var(--green-dark);font-size:15px;margin-top:1px;flex-shrink:0;}
-  html[data-theme="dark"] .practice-list li{color:#c3d6c9;}
+  .rec-more{margin-top:2px;}
+  .rec-more summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--green-dark);padding:4px 0;}
+  html[data-theme="dark"] .rec-more summary{color:var(--green);}
+  .rec-more p{margin:4px 0 0;font-size:13px;color:var(--muted);font-weight:600;line-height:1.5;}
 
-  .specialist-note{background:var(--teal-light);border-radius:12px;padding:12px 14px;font-size:12.5px;color:#2c5764;font-weight:600;line-height:1.5;margin-top:14px;}
-  .specialist-note b{color:#1f4048;}
-  html[data-theme="dark"] .specialist-note{color:#bfe3ee;}
-  html[data-theme="dark"] .specialist-note b{color:#eaf7fb;}
-
-  .rec-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--border);margin-top:18px;padding-top:16px;}
-  .rec-source-note{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px;}
-  .rec-source-note .bx{font-size:14px;}
-  .rec-actions{display:flex;gap:8px;flex-wrap:wrap;}
-  .btn-outline{background:var(--card);border:1.5px solid var(--border);color:var(--ink);border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:transform .12s steps(2), box-shadow .12s steps(2), border-color .15s ease;}
-  .btn-outline:hover{transform:translate(-2px,-2px);border-color:var(--green-dark);box-shadow:2px 2px 0 var(--green-dark);}
-  .btn-outline.danger{color:var(--red);}
-  .btn-outline.danger:hover{border-color:var(--red);box-shadow:2px 2px 0 var(--red);}
-  .btn-solid{background:var(--green);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;box-shadow:0 4px 10px rgba(111,191,90,0.3);transition:transform .12s steps(2), box-shadow .12s steps(2);}
-  .btn-solid:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--green-dark), 0 4px 10px rgba(111,191,90,0.3);}
-  .btn-solid.done{background:var(--muted);box-shadow:none;cursor:default;}
+  /* ---- Buttons: one main action, one quiet secondary ---- */
+  .rec-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--border);margin-top:14px;padding-top:14px;}
+  .rec-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .btn-solid{background:var(--green);color:#fff;border:none;border-radius:12px;padding:10px 18px;min-height:42px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px;box-shadow:0 4px 12px rgba(111,191,90,0.35);transition:transform .12s steps(2), box-shadow .12s steps(2);}
+  .btn-solid .bx{font-size:18px;}
+  .btn-solid:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--green-dark), 0 4px 12px rgba(111,191,90,0.35);}
+  .btn-solid.done{background:var(--green-light);color:var(--green-dark);box-shadow:none;cursor:default;}
   .btn-solid.done:hover{transform:none;box-shadow:none;}
+  .btn-outline{background:var(--card);border:1.5px solid var(--border);color:var(--ink);border-radius:12px;padding:9px 15px;min-height:42px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:transform .12s steps(2), box-shadow .12s steps(2), border-color .15s ease;}
+  .btn-outline:hover{transform:translate(-2px,-2px);border-color:var(--green-dark);box-shadow:2px 2px 0 var(--green-dark);}
+  .btn-outline.quiet{color:var(--muted);}
+  .btn-outline.quiet:hover{color:var(--red);border-color:var(--red);box-shadow:2px 2px 0 var(--red);}
+  .btn-new{font-size:14px;padding:11px 18px;}
 
-  .empty-state{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:50px 20px;text-align:center;color:var(--muted);}
-  .empty-state .bx{font-size:34px;color:var(--green);margin-bottom:10px;display:block;}
-  .empty-state b{color:var(--ink);display:block;font-size:15px;margin-bottom:4px;}
+  .empty-state{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:44px 20px;text-align:center;color:var(--muted);font-size:14px;font-weight:600;}
+  .empty-state .bx{font-size:34px;color:var(--green);margin-bottom:8px;display:block;}
+  .empty-state b{color:var(--ink);display:block;font-size:16px;margin-bottom:4px;}
 
-  /* ---- Modal (write a recommendation): base .overlay/.modal/.form-row in style.css ---- */
-  .modal-head{margin-bottom:18px;padding-right:30px;}
-  .modal-head .sub{font-size:12.5px;color:var(--muted);font-weight:700;}
-  .modal-actions{display:flex;gap:10px;margin-top:6px;}
-  .modal-actions .btn-solid{flex:1;justify-content:center;padding:11px 16px;}
+  .tip .tip-text{font-size:13px;line-height:1.55;}
+  .tip .tip-title{font-size:14.5px;}
+
+  /* ---- Modal (write a recommendation) ---- */
+  .modal-head{margin-bottom:16px;padding-right:30px;}
+  .modal-head h2{font-size:18px;}
+  .modal-head .sub{font-size:13px;color:var(--muted);font-weight:700;}
+  .modal .form-row label{font-size:13.5px;font-weight:800;}
+  .modal .form-row input,.modal .form-row select,.modal .form-row textarea{font-size:14px;}
+  .modal-actions{display:flex;gap:10px;margin-top:8px;}
+  .modal-actions .btn-solid{flex:1;justify-content:center;}
+
+  @media (max-width:700px){
+    .rec-card{padding:16px 16px;}
+    .rec-actions{width:100%;}
+    .rec-actions .btn-solid{flex:1;justify-content:center;}
+  }
 </style>
 </head>
 <body>
@@ -186,309 +217,51 @@
     <div class="topbar">
       <div class="title-block">
         <h1>Recommendations</h1>
-        <div class="greet">🤖 AI-generated insights, ready for your review</div>
+        <div class="greet">Practice ideas for your students. You decide what gets assigned.</div>
       </div>
       <div class="topbar-actions">
-        <div class="search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          Search by student or skill...
-        </div>
-        <div class="date-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          Aug 21, 2026
-        </div>
         <button class="btn-new" id="openRecModal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          Write Recommendation
+          Write My Own
         </button>
-        <div class="bell">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge">3</span>
-        </div>
       </div>
     </div>
 
-    <!-- ================= CONTROLS ================= -->
-    <div class="controls">
-      <div class="tabs" id="filterTabs">
+    <!-- ================= WAITING-FOR-YOU BANNER ================= -->
+    <div class="wait-banner all-clear" id="waitBanner" style="display:none;">
+      <div class="wb-icon"><i class='bx bx-bell'></i></div>
+      <div class="wb-text" id="waitText"></div>
+    </div>
+    <div class="progress-snapshot" id="progressSnapshot" role="status" aria-live="polite">
+      <i class='bx bx-bar-chart-alt-2'></i>
+      <span>Loading student support count from Progress…</span>
+    </div>
+
+    <!-- ================= FILTERS ================= -->
+    <div class="simple-controls">
+      <div class="simple-tabs tabs" id="filterTabs">
         <div class="tab active" data-filter="all">All</div>
-        <div class="tab" data-filter="ai">AI Suggested</div>
-        <div class="tab" data-filter="specialist">Specialist Written</div>
-        <div class="tab" data-filter="pending">Pending Review</div>
-        <div class="tab" data-filter="approved">Approved</div>
-        <div class="tab" data-filter="applied">Applied</div>
+        <div class="tab" data-filter="pending">Waiting for you</div>
+        <div class="tab" data-filter="approved">Assigned</div>
+        <div class="tab" data-filter="applied">Done</div>
+        <div class="tab" data-filter="dismissed">Removed</div>
       </div>
-      <div class="controls-right">
-        <span class="results-count" id="resultsCount">0 recommendations</span>
-        <select class="sort-select" id="sortSelect">
+      <div class="sort-wrap">
+        <span>Show:</span>
+        <select class="sort-select" id="sortSelect" aria-label="Order of recommendations">
           <option value="recent">Newest first</option>
-          <option value="name">Student name (A–Z)</option>
-          <option value="status">Status</option>
+          <option value="name">By student name</option>
+          <option value="status">Waiting ones first</option>
         </select>
       </div>
     </div>
 
     <!-- ================= RECOMMENDATION LIST ================= -->
     <div class="rec-list" id="recList">
-
-      <!-- Card 1: AI, pending -->
-      <div class="rec-card" data-source="ai" data-status="pending" data-name="Carmen Reyes">
-        <div class="rec-top">
-          <div class="rec-who">
-            <div class="rec-avatar" style="background:#6fbf5a">C</div>
-            <div>
-              <div class="rec-name">Carmen Reyes</div>
-              <div class="rec-meta">Grade 3 <span class="dot"></span> "A Rainy Day Surprise" <span class="dot"></span> Aug 20, 2026</div>
-            </div>
-          </div>
-          <div class="rec-tags">
-            <span class="src-pill ai"><i class='bx bx-bot'></i>AI Agent</span>
-            <span class="status-pill pending">Pending Review</span>
-          </div>
-        </div>
-        <div class="rec-body">
-          <div>
-            <div class="rec-section-label"><i class='bx bx-error-circle'></i>Words Carmen struggled with</div>
-            <div class="word-chips">
-              <span class="word-chip">surprise <span class="miss-count">×3</span></span>
-              <span class="word-chip">umbrella <span class="miss-count">×2</span></span>
-              <span class="word-chip">puddle <span class="miss-count">×2</span></span>
-              <span class="word-chip">thunder <span class="miss-count">×1</span></span>
-            </div>
-            <div class="skill-focus"><i class='bx bx-target-lock'></i>Focus skill: blending consonant clusters (spr-, thr-, pl-)</div>
-          </div>
-          <div>
-            <div class="rec-section-label"><i class='bx bx-bulb'></i>AI-recommended practice</div>
-            <ul class="practice-list">
-              <li><i class='bx bx-chevron-right'></i>5-minute daily drill on "spr", "thr", and "pl" blends using flashcards</li>
-              <li><i class='bx bx-chevron-right'></i>Re-read "A Rainy Day Surprise" aloud, pausing on flagged words</li>
-              <li><i class='bx bx-chevron-right'></i>Assign a decodable reader with weather vocabulary for reinforcement</li>
-            </ul>
-          </div>
-        </div>
-        <div class="rec-foot">
-          <div class="rec-source-note"><i class='bx bx-bot'></i>Generated from session on Aug 20, 2026 · 88% accuracy</div>
-          <div class="rec-actions">
-            <button class="btn-outline danger"><i class='bx bx-x'></i>Dismiss</button>
-            <button class="btn-outline"><i class='bx bx-edit-alt'></i>Edit</button>
-            <button class="btn-solid js-approve"><i class='bx bx-check'></i>Approve &amp; Assign</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 2: AI, pending -->
-      <div class="rec-card" data-source="ai" data-status="pending" data-name="Isabella Ramos">
-        <div class="rec-top">
-          <div class="rec-who">
-            <div class="rec-avatar" style="background:#f2a13a">I</div>
-            <div>
-              <div class="rec-name">Isabella Ramos</div>
-              <div class="rec-meta">Grade 3 <span class="dot"></span> "Journey to the Stars" <span class="dot"></span> Aug 19, 2026</div>
-            </div>
-          </div>
-          <div class="rec-tags">
-            <span class="src-pill ai"><i class='bx bx-bot'></i>AI Agent</span>
-            <span class="status-pill pending">Pending Review</span>
-          </div>
-        </div>
-        <div class="rec-body">
-          <div>
-            <div class="rec-section-label"><i class='bx bx-error-circle'></i>Words Isabella struggled with</div>
-            <div class="word-chips">
-              <span class="word-chip">galaxy <span class="miss-count">×4</span></span>
-              <span class="word-chip">astronaut <span class="miss-count">×3</span></span>
-              <span class="word-chip">mysterious <span class="miss-count">×2</span></span>
-            </div>
-            <div class="skill-focus"><i class='bx bx-target-lock'></i>Focus skill: decoding multisyllabic words</div>
-          </div>
-          <div>
-            <div class="rec-section-label"><i class='bx bx-bulb'></i>AI-recommended practice</div>
-            <ul class="practice-list">
-              <li><i class='bx bx-chevron-right'></i>Practice syllable-clapping with "gal-ax-y" and "as-tro-naut"</li>
-              <li><i class='bx bx-chevron-right'></i>Build a personal word wall of space vocabulary before next read</li>
-              <li><i class='bx bx-chevron-right'></i>Pair with an easier space-themed book to build reading confidence</li>
-            </ul>
-          </div>
-        </div>
-        <div class="rec-foot">
-          <div class="rec-source-note"><i class='bx bx-bot'></i>Generated from session on Aug 19, 2026 · 90% accuracy</div>
-          <div class="rec-actions">
-            <button class="btn-outline danger"><i class='bx bx-x'></i>Dismiss</button>
-            <button class="btn-outline"><i class='bx bx-edit-alt'></i>Edit</button>
-            <button class="btn-solid js-approve"><i class='bx bx-check'></i>Approve &amp; Assign</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 3: Specialist, approved -->
-      <div class="rec-card" data-source="specialist" data-status="approved" data-name="Eva Mendoza">
-        <div class="rec-top">
-          <div class="rec-who">
-            <div class="rec-avatar" style="background:#e7c58a">E</div>
-            <div>
-              <div class="rec-name">Eva Mendoza</div>
-              <div class="rec-meta">Grade 3 <span class="dot"></span> "The Three Little Pigs" <span class="dot"></span> Aug 18, 2026</div>
-            </div>
-          </div>
-          <div class="rec-tags">
-            <span class="src-pill specialist"><i class='bx bx-user-voice'></i>Reading Specialist</span>
-            <span class="status-pill approved">Approved</span>
-          </div>
-        </div>
-        <div class="rec-body">
-          <div>
-            <div class="rec-section-label"><i class='bx bx-error-circle'></i>Flagged during reading</div>
-            <div class="word-chips">
-              <span class="word-chip">huffed <span class="miss-count">×2</span></span>
-              <span class="word-chip">chimney <span class="miss-count">×2</span></span>
-            </div>
-            <div class="skill-focus"><i class='bx bx-target-lock'></i>Focus skill: expression &amp; pacing, not just accuracy</div>
-          </div>
-          <div>
-            <div class="rec-section-label"><i class='bx bx-bulb'></i>Specialist-recommended practice</div>
-            <ul class="practice-list">
-              <li><i class='bx bx-chevron-right'></i>Echo-reading exercise focused on dialogue expression</li>
-              <li><i class='bx bx-chevron-right'></i>Record Eva reading a page and play it back together</li>
-            </ul>
-            <div class="specialist-note"><b>Note from Mr. Aquino (Reading Specialist):</b> Eva's accuracy is strong — this is about building fluency and confidence reading aloud, not decoding.</div>
-          </div>
-        </div>
-        <div class="rec-foot">
-          <div class="rec-source-note"><i class='bx bx-user-voice'></i>Written by Mr. Aquino · Aug 18, 2026</div>
-          <div class="rec-actions">
-            <button class="btn-outline"><i class='bx bx-edit-alt'></i>Edit</button>
-            <button class="btn-solid js-apply"><i class='bx bx-send'></i>Mark as Applied</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 4: AI, applied -->
-      <div class="rec-card" data-source="ai" data-status="applied" data-name="Carmen Reyes">
-        <div class="rec-top">
-          <div class="rec-who">
-            <div class="rec-avatar" style="background:#6fbf5a">C</div>
-            <div>
-              <div class="rec-name">Carmen Reyes</div>
-              <div class="rec-meta">Grade 3 <span class="dot"></span> "The Lion and the Mouse" <span class="dot"></span> Aug 12, 2026</div>
-            </div>
-          </div>
-          <div class="rec-tags">
-            <span class="src-pill ai"><i class='bx bx-bot'></i>AI Agent</span>
-            <span class="status-pill applied">Applied</span>
-          </div>
-        </div>
-        <div class="rec-body">
-          <div>
-            <div class="rec-section-label"><i class='bx bx-error-circle'></i>Words Carmen struggled with</div>
-            <div class="word-chips">
-              <span class="word-chip">roared <span class="miss-count">×2</span></span>
-              <span class="word-chip">tangled <span class="miss-count">×1</span></span>
-            </div>
-            <div class="skill-focus"><i class='bx bx-target-lock'></i>Focus skill: -ed past tense endings</div>
-          </div>
-          <div>
-            <div class="rec-section-label"><i class='bx bx-bulb'></i>AI-recommended practice</div>
-            <ul class="practice-list">
-              <li><i class='bx bx-chevron-right'></i>Sort word cards by -ed sound: /t/, /d/, /ɪd/</li>
-              <li><i class='bx bx-chevron-right'></i>Re-read passage aloud once fluently before moving on</li>
-            </ul>
-          </div>
-        </div>
-        <div class="rec-foot">
-          <div class="rec-source-note"><i class='bx bx-check-circle'></i>Approved by Ms. Hernandez · Applied Aug 15, 2026</div>
-          <div class="rec-actions">
-            <button class="btn-solid done" disabled><i class='bx bx-check-double'></i>Completed</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 5: AI, pending -->
-      <div class="rec-card" data-source="ai" data-status="pending" data-name="Diego Santos">
-        <div class="rec-top">
-          <div class="rec-who">
-            <div class="rec-avatar" style="background:#8b6bd1">D</div>
-            <div>
-              <div class="rec-name">Diego Santos</div>
-              <div class="rec-meta">Grade 3 <span class="dot"></span> "The Tortoise and the Hare" <span class="dot"></span> Aug 21, 2026</div>
-            </div>
-          </div>
-          <div class="rec-tags">
-            <span class="src-pill ai"><i class='bx bx-bot'></i>AI Agent</span>
-            <span class="status-pill pending">Pending Review</span>
-          </div>
-        </div>
-        <div class="rec-body">
-          <div>
-            <div class="rec-section-label"><i class='bx bx-error-circle'></i>Words Diego struggled with</div>
-            <div class="word-chips">
-              <span class="word-chip">confident <span class="miss-count">×3</span></span>
-              <span class="word-chip">exhausted <span class="miss-count">×3</span></span>
-              <span class="word-chip">steady <span class="miss-count">×2</span></span>
-            </div>
-            <div class="skill-focus"><i class='bx bx-target-lock'></i>Focus skill: vowel teams (ea, ou) &amp; comprehension pacing</div>
-          </div>
-          <div>
-            <div class="rec-section-label"><i class='bx bx-bulb'></i>AI-recommended practice</div>
-            <ul class="practice-list">
-              <li><i class='bx bx-chevron-right'></i>Vowel-team sorting activity for "ea" and "ou" word families</li>
-              <li><i class='bx bx-chevron-right'></i>Slow down oral reading rate slightly to improve comprehension checks</li>
-              <li><i class='bx bx-chevron-right'></i>Discuss story moral together to reinforce comprehension over speed</li>
-            </ul>
-          </div>
-        </div>
-        <div class="rec-foot">
-          <div class="rec-source-note"><i class='bx bx-bot'></i>Generated from session on Aug 21, 2026 · 82% accuracy</div>
-          <div class="rec-actions">
-            <button class="btn-outline danger"><i class='bx bx-x'></i>Dismiss</button>
-            <button class="btn-outline"><i class='bx bx-edit-alt'></i>Edit</button>
-            <button class="btn-solid js-approve"><i class='bx bx-check'></i>Approve &amp; Assign</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 6: Specialist, applied -->
-      <div class="rec-card" data-source="specialist" data-status="applied" data-name="Isabella Ramos">
-        <div class="rec-top">
-          <div class="rec-who">
-            <div class="rec-avatar" style="background:#f2a13a">I</div>
-            <div>
-              <div class="rec-name">Isabella Ramos</div>
-              <div class="rec-meta">Grade 3 <span class="dot"></span> General fluency check-in <span class="dot"></span> Aug 10, 2026</div>
-            </div>
-          </div>
-          <div class="rec-tags">
-            <span class="src-pill specialist"><i class='bx bx-user-voice'></i>Reading Specialist</span>
-            <span class="status-pill applied">Applied</span>
-          </div>
-        </div>
-        <div class="rec-body">
-          <div>
-            <div class="rec-section-label"><i class='bx bx-error-circle'></i>Flagged during reading</div>
-            <div class="word-chips">
-              <span class="word-chip">whispered <span class="miss-count">×2</span></span>
-            </div>
-            <div class="skill-focus"><i class='bx bx-target-lock'></i>Focus skill: silent letters (wh-)</div>
-          </div>
-          <div>
-            <div class="rec-section-label"><i class='bx bx-bulb'></i>Specialist-recommended practice</div>
-            <ul class="practice-list">
-              <li><i class='bx bx-chevron-right'></i>Silent-letter word hunt worksheet, focused on "wh" words</li>
-            </ul>
-            <div class="specialist-note"><b>Note from Mr. Aquino (Reading Specialist):</b> Quick, isolated fix — check in again after next session to confirm it stuck.</div>
-          </div>
-        </div>
-        <div class="rec-foot">
-          <div class="rec-source-note"><i class='bx bx-user-voice'></i>Written by Mr. Aquino · Applied Aug 13, 2026</div>
-          <div class="rec-actions">
-            <button class="btn-solid done" disabled><i class='bx bx-check-double'></i>Completed</button>
-          </div>
-        </div>
-      </div>
-
       <div class="empty-state" id="emptyState" style="display:none;">
         <i class='bx bx-bulb'></i>
-        <b>No recommendations here yet</b>
-        Try a different filter, or write one manually for a student.
+        <b>Nothing to show here</b>
+        Try another filter above, or tap “Write My Own” to add one.
       </div>
     </div>
 
@@ -497,8 +270,8 @@
         <i class='bx bx-bot' style="font-size:22px;color:#8b6bd1;"></i>
       </div>
       <div>
-        <div class="tip-title">How AI recommendations work</div>
-        <div class="tip-text">After each reading session, ReadPilot's AI reviews which words a student mispronounced, skipped, or paused on, then suggests targeted practice. Every suggestion waits for your approval before it's assigned.</div>
+        <div class="tip-title">How suggestions work</div>
+        <div class="tip-text">After each reading session, ReadPilot looks at which words were hard and suggests some practice. Nothing is given to a student until you say yes.</div>
       </div>
       <div class="tip-close" id="tipClose">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -506,33 +279,33 @@
     </div>
   </main>
 
-  <!-- ================= MODAL: Write a Recommendation ================= -->
+  <!-- ================= MODAL: Write My Own ================= -->
   <div class="overlay" id="recOverlay">
     <div class="modal">
-      <button class="modal-close" id="closeRecModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <button class="modal-close" id="closeRecModal" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       <div class="modal-head">
-        <h2>Write a Recommendation</h2>
-        <div class="sub">Add your own guidance alongside the AI's suggestions</div>
+        <h2>Write My Own Recommendation</h2>
+        <div class="sub">Add your own practice idea for a student</div>
       </div>
       <div class="form-row">
-        <label>Student</label>
+        <label for="formStudent">Which student?</label>
         <select id="formStudent"></select>
       </div>
       <div class="form-row">
-        <label>Related session / book (optional)</label>
-        <input type="text" id="formBook" placeholder="e.g. The Three Little Pigs">
-      </div>
-      <div class="form-row">
-        <label>Skill focus</label>
+        <label for="formSkill">What do they need help with?</label>
         <input type="text" id="formSkill" placeholder="e.g. Blending consonant clusters">
       </div>
       <div class="form-row">
-        <label>Recommended practice &amp; notes</label>
-        <textarea id="formNotes" placeholder="Describe the practice activities and any context for this student..."></textarea>
+        <label for="formNotes">What should they practice?</label>
+        <textarea id="formNotes" placeholder="Describe the practice activities. Put each idea on its own line."></textarea>
+      </div>
+      <div class="form-row">
+        <label for="formBook">Book (optional)</label>
+        <input type="text" id="formBook" placeholder="e.g. The Three Little Pigs">
       </div>
       <div class="modal-actions">
         <button class="btn-outline" id="cancelRecModal">Cancel</button>
-        <button class="btn-solid" id="saveRecModal"><i class='bx bx-check'></i>Save Recommendation</button>
+        <button class="btn-solid" id="saveRecModal"><i class='bx bx-check'></i>Save</button>
       </div>
     </div>
   </div>
@@ -542,10 +315,6 @@
 
   <script>
     // ---- Hamburger: collapse sidebar ----
-    // Toggles the same data-sidebar="collapsed" attribute on <html> that the
-    // shared stylesheet's collapsed rules key off of, and persists the choice
-    // to localStorage so it stays collapsed/expanded across every page (the
-    // inline <head> script above reads it back before paint on load).
     document.getElementById('sidebarToggle').addEventListener('click', function(){
       var html = document.documentElement;
       var isCollapsed = html.getAttribute('data-sidebar') === 'collapsed';
@@ -559,8 +328,7 @@
       try {
         localStorage.setItem('readpilot-sidebar', isCollapsed ? 'expanded' : 'collapsed');
       } catch (e) {
-        /* localStorage unavailable (e.g. private browsing) — toggle still
-           works for this page load, it just won't persist across pages */
+        /* localStorage unavailable — toggle still works for this page load */
       }
     });
 
@@ -577,90 +345,193 @@
       toastMsg.textContent = msg;
       toast.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 2400);
+      toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 3000);
     }
 
-    // ---- Filtering ----
+    // ---- State ----
     var tabs = document.querySelectorAll('.tab');
     var cards = [];
     var emptyState = document.getElementById('emptyState');
-    var resultsCount = document.getElementById('resultsCount');
     var recList = document.getElementById('recList');
+    var waitBanner = document.getElementById('waitBanner');
+    var waitText = document.getElementById('waitText');
     var recommendations = [];
+    var progressSnapshot = document.querySelector('#progressSnapshot span');
     var activeFilter = 'all';
+    var activeSort = 'recent';
 
     function escapeHtml(value){
-      return String(value || '').replace(/[&<>"']/g, function(character){
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(character){
         return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character];
       });
     }
-    function statusLabel(status){ return status === 'pending' ? 'Pending Review' : status === 'approved' ? 'Approved' : 'Applied'; }
-    function renderCard(rec){
-      var initial = escapeHtml((rec.studentName || '?').charAt(0).toUpperCase());
-      var sourceLabel = rec.source === 'ai' ? 'AI Agent' : rec.source === 'specialist' ? 'Reading Specialist' : 'Teacher Written';
-      var icon = rec.source === 'ai' ? 'bx-bot' : rec.source === 'specialist' ? 'bx-user-voice' : 'bx-edit-alt';
-      var action = rec.status === 'pending' ? '<button class="btn-solid js-approve"><i class="bx bx-check"></i>Approve &amp; Assign</button>' : rec.status === 'approved' ? '<button class="btn-solid js-apply"><i class="bx bx-send"></i>Mark as Applied</button>' : '<button class="btn-solid done" disabled><i class="bx bx-check-double"></i>Completed</button>';
-      return '<div class="rec-card" data-id="'+rec.id+'" data-source="'+escapeHtml(rec.source)+'" data-status="'+escapeHtml(rec.status)+'" data-name="'+escapeHtml(rec.studentName)+'">'
-        + '<div class="rec-top"><div class="rec-who"><div class="rec-avatar" style="background:'+escapeHtml(rec.color || '#6fbf5a')+'">'+initial+'</div><div><div class="rec-name">'+escapeHtml(rec.studentName)+'</div><div class="rec-meta">'+escapeHtml(rec.relatedBook || 'Teacher recommendation')+'</div></div></div><div class="rec-tags"><span class="src-pill '+escapeHtml(rec.source)+'"><i class="bx '+icon+'"></i>'+sourceLabel+'</span><span class="status-pill '+escapeHtml(rec.status)+'">'+statusLabel(rec.status)+'</span></div></div>'
-        + '<div class="rec-body"><div><div class="rec-section-label"><i class="bx bx-target-lock"></i>Skill focus</div><div class="skill-focus">'+escapeHtml(rec.skillFocus)+'</div></div><div><div class="rec-section-label"><i class="bx bx-bulb"></i>Recommended practice</div><ul class="practice-list"><li><i class="bx bx-chevron-right"></i>'+escapeHtml(rec.practiceNotes)+'</li></ul></div></div>'
-        + '<div class="rec-foot"><div class="rec-source-note"><i class="bx '+icon+'"></i>Saved recommendation</div><div class="rec-actions"><button class="btn-outline danger js-dismiss"><i class="bx bx-x"></i>Dismiss</button>'+action+'</div></div></div>';
+    function firstName(name){ return String(name || 'this student').split(' ')[0]; }
+    function niceDate(value){
+      var t = Date.parse(String(value || '').replace(' ', 'T'));
+      if(isNaN(t)) return '';
+      return new Date(t).toLocaleDateString(undefined, {month:'short', day:'numeric'});
     }
+
+    var STATUS = {
+      pending:  {label:'Waiting for you', icon:'bx-time-five'},
+      approved: {label:'Assigned',        icon:'bx-send'},
+      applied:  {label:'Done',            icon:'bx-check-circle'},
+      dismissed:{label:'Removed',         icon:'bx-x-circle'}
+    };
+
+    // ---- Build one card ----
+    function renderCard(rec){
+      var st = STATUS[rec.status] || STATUS.pending;
+      var initial = escapeHtml((rec.studentName || '?').charAt(0).toUpperCase());
+      var who = firstName(rec.studentName);
+      var sourceNote = rec.source === 'ai' ? 'Suggested by ReadPilot'
+                     : rec.source === 'specialist' ? 'Written by the reading specialist'
+                     : 'Written by a teacher';
+
+      var metaParts = [];
+      if(rec.relatedBook) metaParts.push('Book: ' + rec.relatedBook);
+      var d = niceDate(rec.createdAt);
+      if(d) metaParts.push(d);
+      var meta = metaParts.length ? escapeHtml(metaParts.join(' • ')) : '&nbsp;';
+
+      var steps = String(rec.practiceNotes || '').split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+      if(!steps.length) steps = ['No practice notes were added.'];
+      var stepsHtml = steps.map(function(s){
+        return '<li><i class="bx bx-check-circle"></i><span>'+escapeHtml(s)+'</span></li>';
+      }).join('');
+
+      var ask = '', action = '';
+      if(rec.status === 'pending'){
+        ask = '<div class="rec-ask">Would you like to give this practice to '+escapeHtml(who)+'?</div>';
+        action = '<button class="btn-outline quiet js-dismiss"><i class="bx bx-x"></i>No thanks</button>'
+               + '<button class="btn-solid js-approve"><i class="bx bx-check"></i>Yes, assign this</button>';
+      } else if(rec.status === 'approved'){
+        ask = '<div class="rec-ask">This practice has been assigned to '+escapeHtml(who)+'. Tap “Mark as done” once '+escapeHtml(who)+' has finished.</div>';
+        action = '<button class="btn-outline quiet js-dismiss"><i class="bx bx-x"></i>Remove</button>'
+               + '<button class="btn-solid js-apply"><i class="bx bx-check-double"></i>Mark as done</button>';
+      } else if(rec.status === 'applied'){
+        action = '<button class="btn-solid done" disabled><i class="bx bx-check-double"></i>All done</button>';
+      } else {
+        action = '<button class="btn-outline quiet" disabled><i class="bx bx-x-circle"></i>Removed</button>';
+      }
+
+      return '<div class="rec-card" data-id="'+escapeHtml(rec.id)+'" data-source="'+escapeHtml(rec.source)+'" data-status="'+escapeHtml(rec.status)+'" data-name="'+escapeHtml(rec.studentName)+'">'
+        + '<div class="rec-top">'
+          + '<div class="rec-who"><div class="rec-avatar" style="background:'+escapeHtml(rec.color || '#6fbf5a')+'">'+initial+'</div>'
+          + '<div><div class="rec-name">'+escapeHtml(rec.studentName)+'</div><div class="rec-meta">'+meta+'</div></div></div>'
+          + '<span class="status-pill '+escapeHtml(rec.status)+'"><i class="bx '+st.icon+'"></i>'+st.label+'</span>'
+        + '</div>'
+        + ask
+        + '<div class="rec-block"><div class="rec-label"><i class="bx bx-target-lock"></i>Needs help with</div>'
+          + '<div class="skill-focus"><i class="bx bx-bulb"></i><span>'+escapeHtml(rec.skillFocus)+'</span></div></div>'
+        + '<div class="rec-block"><div class="rec-label"><i class="bx bx-list-check"></i>What to practice</div>'
+          + '<ul class="practice-list">'+stepsHtml+'</ul></div>'
+        + '<details class="rec-more"><summary>More details</summary><p>'+escapeHtml(sourceNote)+'.</p></details>'
+        + '<div class="rec-foot"><div></div><div class="rec-actions">'+action+'</div></div>'
+        + '</div>';
+    }
+
+    // ---- Banner at the top ----
+    function updateBanner(){
+      var waiting = recommendations.filter(function(r){ return r.status === 'pending'; }).length;
+      waitBanner.style.display = 'flex';
+      if(waiting > 0){
+        waitBanner.classList.remove('all-clear');
+        waitText.innerHTML = 'You have <b>'+waiting+'</b> suggestion'+(waiting === 1 ? '' : 's')+' waiting for you<small>Read each one and choose Yes or No.</small>';
+      } else {
+        waitBanner.classList.add('all-clear');
+        waitText.innerHTML = 'You are all caught up<small>Nothing is waiting for your decision right now.</small>';
+      }
+    }
+
+    function renderProgressSnapshot(summary){
+      var assessedCount = Number(summary && summary.assessedCount) || 0;
+      var needsSupportCount = Number(summary && summary.needsSupportCount) || 0;
+      if(assessedCount === 0){
+        progressSnapshot.textContent = 'No students have a saved AI assessment in Progress yet.';
+        return;
+      }
+      progressSnapshot.textContent = 'Progress shows '+needsSupportCount+' student'+(needsSupportCount === 1 ? '' : 's')+' marked “Needs Support” in the latest AI assessment ('+assessedCount+' student'+(assessedCount === 1 ? '' : 's')+' assessed).';
+    }
+
+    // ---- Render everything ----
     function renderRecommendations(){
-      recList.querySelectorAll('.rec-card').forEach(function(card){ card.remove(); });
-      recommendations.slice().reverse().forEach(function(rec){ recList.insertAdjacentHTML('afterbegin', renderCard(rec)); });
+      Array.prototype.slice.call(recList.children).forEach(function(child){
+        if(child.classList.contains('rec-section-group') || child.classList.contains('rec-card')) child.remove();
+      });
+      var grouped = new Map();
+      recommendations.forEach(function(rec){
+        var sectionName = rec.sectionName || 'Unassigned';
+        if(!grouped.has(sectionName)) grouped.set(sectionName, []);
+        grouped.get(sectionName).push(rec);
+      });
+      var statusRank = {pending:0, approved:1, applied:2, dismissed:3};
+      Array.from(grouped.entries()).sort(function(a,b){ return a[0].localeCompare(b[0], undefined, {numeric:true, sensitivity:'base'}); }).forEach(function(entry){
+        var sectionName = entry[0];
+        var list = entry[1];
+        if(activeSort === 'name'){
+          list.sort(function(a,b){ return a.studentName.localeCompare(b.studentName); });
+        } else if(activeSort === 'status'){
+          list.sort(function(a,b){ return statusRank[a.status] - statusRank[b.status] || a.studentName.localeCompare(b.studentName); });
+        } else {
+          list.sort(function(a,b){ return String(b.createdAt).localeCompare(String(a.createdAt)); });
+        }
+        var group = document.createElement('section');
+        group.className = 'rec-section-group';
+        group.innerHTML = '<div class="rec-section-heading">'+escapeHtml(sectionName)+' <span class="count">'+list.length+' recommendation'+(list.length === 1 ? '' : 's')+'</span></div>';
+        list.forEach(function(rec){ group.insertAdjacentHTML('beforeend', renderCard(rec)); });
+        recList.insertBefore(group, emptyState);
+      });
       cards = Array.prototype.slice.call(recList.querySelectorAll('.rec-card'));
       applyFilter(activeFilter);
+      updateBanner();
       bindRecommendationActions();
     }
 
     function applyFilter(filter){
       var visible = 0;
       cards.forEach(function(card){
-        var match = filter === 'all'
-          || card.dataset.source === filter
-          || card.dataset.status === filter;
+        var match = filter === 'all' || card.dataset.status === filter;
         card.classList.toggle('is-hidden', !match);
         if (match) visible++;
       });
+      recList.querySelectorAll('.rec-section-group').forEach(function(group){
+        group.classList.toggle('is-hidden', !group.querySelector('.rec-card:not(.is-hidden)'));
+      });
       emptyState.style.display = visible === 0 ? 'block' : 'none';
-      resultsCount.textContent = visible + (visible === 1 ? ' recommendation' : ' recommendations');
     }
 
+    function setFilter(filter){
+      activeFilter = filter;
+      tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.filter === filter); });
+      applyFilter(filter);
+      updateBanner();
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
     tabs.forEach(function(tab){
-      tab.addEventListener('click', function(){
-        tabs.forEach(function(t){ t.classList.remove('active'); });
-        this.classList.add('active');
-        activeFilter = this.dataset.filter;
-        applyFilter(this.dataset.filter);
-      });
+      tab.addEventListener('click', function(){ setFilter(this.dataset.filter); });
     });
 
     // ---- Sorting ----
     document.getElementById('sortSelect').addEventListener('change', function(){
-      var order = this.value;
-      var list = Array.prototype.slice.call(cards);
-      var statusRank = { pending: 0, approved: 1, applied: 2 };
-      if (order === 'name'){
-        list.sort(function(a,b){ return a.dataset.name.localeCompare(b.dataset.name); });
-      } else if (order === 'status'){
-        list.sort(function(a,b){ return statusRank[a.dataset.status] - statusRank[b.dataset.status]; });
-      } else {
-        list.sort(function(a,b){ return list.indexOf(a) - list.indexOf(b); }); // keep original / "newest" order
-      }
-      list.forEach(function(card){ recList.insertBefore(card, emptyState); });
+      activeSort = this.value;
+      renderRecommendations();
     });
 
-    // ---- Approve / Apply / Dismiss actions ----
+    // ---- Approve / Done / Dismiss actions ----
     function bindRecommendationActions(){
       recList.querySelectorAll('.js-approve, .js-apply, .js-dismiss').forEach(function(button){
         button.addEventListener('click', function(){
           var card = this.closest('.rec-card');
           var action = this.classList.contains('js-approve') ? 'approve' : this.classList.contains('js-apply') ? 'apply' : 'dismiss';
+          if(action === 'dismiss' && !confirm('Remove this recommendation? You will not see it again.')) return;
+          var btn = this;
+          btn.disabled = true;
           fetch('recommendation-api.php', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams({action:action, id:card.dataset.id})})
             .then(function(response){ return response.json().then(function(data){ return {ok:response.ok, data:data}; }); })
-            .then(function(result){ if(!result.ok) throw new Error(result.data.error || 'Unable to update recommendation'); return loadRecommendations(); })
-            .then(function(){ showToast(action === 'approve' ? 'Recommendation approved and assigned' : action === 'apply' ? 'Marked as applied' : 'Recommendation dismissed'); })
-            .catch(function(error){ showToast(error.message); });
+            .then(function(result){ if(!result.ok) throw new Error(result.data.error || 'Something went wrong. Please try again.'); return loadRecommendations(); })
+            .then(function(){ showToast(action === 'approve' ? 'Done! It has been assigned to the student.' : action === 'apply' ? 'Marked as done.' : 'Recommendation removed.'); })
+            .catch(function(error){ btn.disabled = false; showToast(error.message); });
         });
       });
     }
@@ -673,23 +544,30 @@
     document.getElementById('closeRecModal').addEventListener('click', closeModal);
     document.getElementById('cancelRecModal').addEventListener('click', closeModal);
     overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
+
     document.getElementById('saveRecModal').addEventListener('click', function(){
       var studentId = document.getElementById('formStudent').value;
       var skill = document.getElementById('formSkill').value.trim();
       var notes = document.getElementById('formNotes').value.trim();
-      if(!studentId || !skill || !notes){ showToast('Student, skill focus, and notes are required'); return; }
+      if(!studentId || !skill || !notes){ showToast('Please choose a student and fill in the two main boxes.'); return; }
       fetch('recommendation-api.php', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams({action:'save', student_id:studentId, related_book:document.getElementById('formBook').value.trim(), skill_focus:skill, practice_notes:notes})})
         .then(function(response){ return response.json().then(function(data){ return {ok:response.ok, data:data}; }); })
-        .then(function(result){ if(!result.ok) throw new Error(result.data.error || 'Unable to save recommendation'); closeModal(); document.getElementById('formSkill').value=''; document.getElementById('formNotes').value=''; return loadRecommendations(); })
-        .then(function(){ showToast('Recommendation saved'); })
+        .then(function(result){ if(!result.ok) throw new Error(result.data.error || 'Unable to save. Please try again.'); closeModal(); document.getElementById('formSkill').value=''; document.getElementById('formNotes').value=''; document.getElementById('formBook').value=''; return loadRecommendations(); })
+        .then(function(){ showToast('Saved. Your recommendation was added.'); })
         .catch(function(error){ showToast(error.message); });
     });
 
+    // ---- Load data ----
     function loadRecommendations(){
       return fetch('recommendation-api.php').then(function(response){ return response.json().then(function(data){ if(!response.ok) throw new Error(data.error || 'Unable to load recommendations'); return data; }); }).then(function(data){
         recommendations = data.recommendations || [];
+        renderProgressSnapshot(data.progressSummary);
         renderRecommendations();
-      }).catch(function(error){ showToast(error.message); });
+      }).catch(function(error){
+        progressSnapshot.textContent = 'Progress student count is unavailable right now.';
+        showToast(error.message);
+      });
     }
     fetch('student-api.php').then(function(response){ return response.json(); }).then(function(data){
       var select = document.getElementById('formStudent');

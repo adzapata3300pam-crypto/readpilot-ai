@@ -40,6 +40,8 @@ function supabase_s3_client(): S3Client
         'use_path_style_endpoint' => true,
         'signature_version' => 'v4',
         'credentials' => ['key' => $key, 'secret' => $secret],
+        'retries' => ['mode' => 'standard', 'max_attempts' => 4],
+        'http' => ['connect_timeout' => 10, 'timeout' => 60],
         'request_checksum_calculation' => 'when_required',
         'response_checksum_validation' => 'when_required',
     ]);

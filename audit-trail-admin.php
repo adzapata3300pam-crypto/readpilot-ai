@@ -70,6 +70,7 @@
         <a class="nav-item" href="admin.php"><i class="bx bxs-dashboard"></i><span class="label">Dashboard</span></a>
         <a class="nav-item" href="users-admin.php"><i class="bx bx-user-circle"></i><span class="label">User Management</span></a>
         <a class="nav-item" href="gradesec-admin.php"><i class="bx bx-layer"></i><span class="label">Student Records</span></a>
+        <a class="nav-item" href="teacher-activity-admin.php"><i class="bx bx-pulse"></i><span class="label">Teacher Activity</span></a>
         <a class="nav-item active" href="audit-trail-admin.php"><i class="bx bx-history"></i><span class="label">Audit Log</span></a>
         <a class="nav-item" href="settings-admin.php"><i class="bx bx-cog"></i><span class="label">Settings</span></a>
       </nav>
@@ -77,7 +78,7 @@
     <div class="teacher-card">
       <div class="teacher-row">
         <div class="teacher-row-info">
-          <div class="avatar">🛡️</div>
+          <div class="avatar"><?php include __DIR__ . '/profile-avatar.php'; ?></div>
           <div><div class="teacher-name"><?= htmlspecialchars(current_user()['full_name'], ENT_QUOTES, 'UTF-8') ?></div><div class="teacher-role">System Administrator</div></div>
         </div>
         <button class="teacher-logout-btn" id="sidebarLogoutBtn" title="Log out" aria-label="Log out"><i class='bx bx-log-out'></i></button>

@@ -16,6 +16,14 @@ $recentActivity = $pdo->query(
 )->fetchAll();
 
 $todayLabel = date('M j, Y');
+$adminNotifications = $pendingApprovals > 0
+    ? [['title' => $pendingApprovals . ' access request' . ($pendingApprovals === 1 ? '' : 's') . ' waiting for review', 'sub' => 'Review in User Management']]
+    : [];
+$adminNotificationsJson = htmlspecialchars(
+    json_encode($adminNotifications, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP),
+    ENT_QUOTES,
+    'UTF-8'
+);
 $greet = '👋 Hello, ' . htmlspecialchars($currentUser['full_name'], ENT_QUOTES, 'UTF-8') . '!';
 ?>
 <!DOCTYPE html>
@@ -100,6 +108,7 @@ $greet = '👋 Hello, ' . htmlspecialchars($currentUser['full_name'], ENT_QUOTES
         <a class="nav-item active" href="admin.php"><i class="bx bxs-dashboard"></i><span class="label">Dashboard</span></a>
         <a class="nav-item" href="users-admin.php"><i class="bx bx-user-circle"></i><span class="label">User Management</span></a>
         <a class="nav-item" href="gradesec-admin.php"><i class="bx bx-layer"></i><span class="label">Student Records</span></a>
+        <a class="nav-item" href="teacher-activity-admin.php"><i class="bx bx-pulse"></i><span class="label">Teacher Activity</span></a>
         <a class="nav-item" href="audit-trail-admin.php"><i class="bx bx-history"></i><span class="label">Audit Log</span></a>
         <a class="nav-item" href="settings-admin.php"><i class="bx bx-cog"></i><span class="label">Settings</span></a>
       </nav>
@@ -108,7 +117,7 @@ $greet = '👋 Hello, ' . htmlspecialchars($currentUser['full_name'], ENT_QUOTES
     <div class="teacher-card">
       <div class="teacher-row">
         <div class="teacher-row-info">
-          <div class="avatar">🛡️</div>
+          <div class="avatar"><?php include __DIR__ . '/profile-avatar.php'; ?></div>
           <div>
             <div class="teacher-name" id="sidebarName"><?= htmlspecialchars(current_user()['full_name'], ENT_QUOTES, 'UTF-8') ?></div>
             <div class="teacher-role">System Administrator</div>
@@ -135,9 +144,9 @@ $greet = '👋 Hello, ' . htmlspecialchars($currentUser['full_name'], ENT_QUOTES
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           <?= htmlspecialchars($todayLabel, ENT_QUOTES, 'UTF-8') ?>
         </div>
-        <div class="bell" data-notifications='[{"title":"<?= $pendingApprovals ?> requests waiting for review","sub":"Review in User Management"},{"title":"System status check","sub":"Latest audit activity is up to date"}]'>
+        <div class="bell" data-notifications="<?= $adminNotificationsJson ?>" data-notification-count="<?= $pendingApprovals ?>">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span class="badge"><?= $pendingApprovals > 0 ? $pendingApprovals : 0 ?></span>
+          <span class="badge"<?= $pendingApprovals > 0 ? '' : ' style="display:none;"' ?>><?= $pendingApprovals ?></span>
         </div>
       </div>
     </div>
@@ -195,7 +204,7 @@ $greet = '👋 Hello, ' . htmlspecialchars($currentUser['full_name'], ENT_QUOTES
           Recent Activity
           <span class="live-pill"><span class="live-dot"></span>Live</span>
         </div>
-        <a class="view-all">View All</a>
+        <a class="view-all" href="teacher-activity-admin.php">View All</a>
       </div>
 
       <?php foreach ($recentActivity as $item):
@@ -219,11 +228,6 @@ $greet = '👋 Hello, ' . htmlspecialchars($currentUser['full_name'], ENT_QUOTES
         <div class="s-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
       </div>
       <?php endforeach; ?>
-
-        </div>
-        <div class="s-badge" style="background:var(--teal-light);color:var(--teal)">Updated</div>
-        <div class="s-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
-      </div>
 
       <div class="session-row dashboard-extra-activity" style="display:none;">
         <div class="s-avatar" style="background:#8b6bd1">AC</div>
